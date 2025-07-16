@@ -1,0 +1,53 @@
+[Unit]
+Description=Continuum Relayer Service
+Documentation=https://docs.continuum.fi
+After=network.target
+
+[Service]
+Type=simple
+User=continuum
+Group=continuum
+WorkingDirectory=/opt/continuum-relayer
+Environment="NODE_ENV=production"
+Environment="NODE_OPTIONS=--max-old-space-size=4096"
+EnvironmentFile=/opt/continuum-relayer/.env
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/continuum-relayer/logs /opt/continuum-relayer/data
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Start command
+ExecStartPre=/usr/bin/npm run build
+ExecStart=/usr/bin/node dist/server.js
+
+# Graceful shutdown
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=continuum-relayer
+
+[Install]
+WantedBy=multi-user.target
