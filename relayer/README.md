@@ -40,7 +40,7 @@ CONTINUUM_PROGRAM_ID=A548C9LR926hnAWvYDjsXJddidhfzLf3bRb8dmYPgRKn
 CP_SWAP_PROGRAM_ID=GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
 
 # Server Configuration
-PORT=8080
+PORT=8085
 ALLOWED_ORIGINS=https://app.continuum.fi,http://localhost:3000
 
 # Performance Settings
@@ -49,23 +49,104 @@ MAX_CONCURRENT_EXECUTIONS=5
 RETRY_ATTEMPTS=3
 ```
 
-### 3. Start the Relayer
+### 3. Running the Relayer
+
+#### Option A: Using the Startup Script (Recommended)
 
 ```bash
-# Generate keypair (first time only)
+# Start the relayer
 ./start-relayer.sh start
 
-# The script will:
-# - Generate a relayer keypair if needed
-# - Check prerequisites
-# - Install dependencies
-# - Build the project
-# - Start the service
+# Check status
+./start-relayer.sh status
+
+# View logs
+./start-relayer.sh logs
+
+# Stop the relayer
+./start-relayer.sh stop
+
+# Restart the relayer
+./start-relayer.sh restart
 ```
 
-### 4. Fund the Relayer
+#### Option B: Direct Node.js Execution
 
-Send SOL to the relayer address shown in the startup logs for transaction fees.
+```bash
+# Build the TypeScript code
+npm run build
+
+# Start in development mode (with hot reload)
+npm run dev
+
+# Start in production mode
+npm start
+```
+
+#### Option C: Using PM2 (Production)
+
+```bash
+# Install PM2 globally
+npm install -g pm2
+
+# Start with PM2
+RELAYER_MODE=pm2 ./start-relayer.sh start
+
+# Or manually:
+pm2 start dist/server.js --name continuum-relayer
+
+# View logs
+pm2 logs continuum-relayer
+
+# Monitor
+pm2 monit
+
+# Stop
+pm2 stop continuum-relayer
+```
+
+#### Option D: Using Docker
+
+```bash
+# Build and start with docker-compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f relayer
+
+# Stop
+docker-compose down
+```
+
+### 4. Verify the Service is Running
+
+```bash
+# Check health
+curl http://localhost:8085/health
+
+# Expected response:
+{
+  "status": "healthy",
+  "relayer": "ByDjc6nXScc8PwA8VHmeR3CjefKRs6jXyo6He3AYWCft",
+  "timestamp": "2024-01-15T12:00:00.000Z",
+  "version": "1.0.0"
+}
+
+# Get relayer info
+curl http://localhost:8085/api/v1/info
+```
+
+### 5. Fund the Relayer
+
+The relayer needs SOL to pay for transaction fees:
+
+```bash
+# Get the relayer address from the startup logs or info endpoint
+# Example: ByDjc6nXScc8PwA8VHmeR3CjefKRs6jXyo6He3AYWCft
+
+# Send at least 0.1 SOL to the relayer address
+solana transfer ByDjc6nXScc8PwA8VHmeR3CjefKRs6jXyo6He3AYWCft 0.1
+```
 
 ## API Endpoints
 
@@ -203,13 +284,126 @@ ws.send(JSON.stringify({
 }));
 ```
 
+## How to Contact the Relayer
+
+### Testing Connectivity
+
+```bash
+# 1. Test if the relayer is reachable
+curl -I http://localhost:8085/health
+
+# 2. Test with a simple health check
+curl http://localhost:8085/health | jq
+
+# 3. Test WebSocket connectivity
+wscat -c ws://localhost:8085/ws/orders/test-order
+```
+
+### Making API Calls
+
+#### Using cURL
+
+```bash
+# Get relayer information
+curl http://localhost:8085/api/v1/info | jq
+
+# Submit an order
+curl -X POST http://localhost:8085/api/v1/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction": "base64_encoded_transaction_here",
+    "poolId": "BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2",
+    "amountIn": "1000000000",
+    "minAmountOut": "950000000",
+    "isBaseInput": true,
+    "userPublicKey": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+  }' | jq
+
+# Check order status
+curl http://localhost:8085/api/v1/orders/ord_1234567890 | jq
+
+# Get supported pools
+curl http://localhost:8085/api/v1/pools | jq
+
+# Get statistics
+curl http://localhost:8085/api/v1/stats | jq
+```
+
+#### Using HTTPie (more user-friendly)
+
+```bash
+# Install HTTPie
+pip install httpie
+
+# Get relayer info
+http GET localhost:8085/api/v1/info
+
+# Submit order
+http POST localhost:8085/api/v1/orders \
+  transaction="base64_encoded_transaction" \
+  poolId="BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2" \
+  amountIn="1000000000" \
+  minAmountOut="950000000" \
+  isBaseInput=true \
+  userPublicKey="9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+```
+
+### Testing with Node.js
+
+```javascript
+// test-relayer-connection.js
+const fetch = require('node-fetch');
+
+async function testRelayer() {
+  const RELAYER_URL = 'http://localhost:8085';
+  
+  // Test health
+  const health = await fetch(`${RELAYER_URL}/health`).then(r => r.json());
+  console.log('Health:', health);
+  
+  // Test info
+  const info = await fetch(`${RELAYER_URL}/api/v1/info`).then(r => r.json());
+  console.log('Info:', info);
+  
+  // Test order submission
+  const order = await fetch(`${RELAYER_URL}/api/v1/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      transaction: Buffer.from('test').toString('base64'),
+      poolId: 'test-pool',
+      amountIn: '1000000000',
+      minAmountOut: '950000000',
+      isBaseInput: true,
+      userPublicKey: 'test-user'
+    })
+  }).then(r => r.json());
+  console.log('Order:', order);
+}
+
+testRelayer().catch(console.error);
+```
+
 ## Client Integration Example
 
-### JavaScript/TypeScript
+### JavaScript/TypeScript Client
 
 ```typescript
+import { Connection, Transaction, PublicKey } from '@solana/web3.js';
+import { BN } from '@coral-xyz/anchor';
+
 class ContinuumRelayerClient {
   constructor(private relayerUrl: string) {}
+
+  async checkHealth() {
+    const response = await fetch(`${this.relayerUrl}/health`);
+    return response.json();
+  }
+
+  async getInfo() {
+    const response = await fetch(`${this.relayerUrl}/api/v1/info`);
+    return response.json();
+  }
 
   async submitOrder(params: {
     transaction: Transaction;
@@ -233,9 +427,18 @@ class ContinuumRelayerClient {
     });
 
     if (!response.ok) {
-      throw new Error(`Relayer error: ${response.statusText}`);
+      const error = await response.text();
+      throw new Error(`Relayer error: ${response.status} - ${error}`);
     }
 
+    return response.json();
+  }
+
+  async getOrderStatus(orderId: string) {
+    const response = await fetch(`${this.relayerUrl}/api/v1/orders/${orderId}`);
+    if (!response.ok) {
+      throw new Error(`Failed to get order status: ${response.statusText}`);
+    }
     return response.json();
   }
 
@@ -245,29 +448,167 @@ class ContinuumRelayerClient {
     );
     return ws;
   }
+
+  async waitForExecution(orderId: string, timeoutMs = 30000): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const ws = this.subscribeToOrder(orderId);
+      const timeout = setTimeout(() => {
+        ws.close();
+        reject(new Error('Order execution timeout'));
+      }, timeoutMs);
+
+      ws.on('message', (data) => {
+        const update = JSON.parse(data.toString());
+        if (update.status === 'executed') {
+          clearTimeout(timeout);
+          ws.close();
+          resolve(update);
+        } else if (update.status === 'failed') {
+          clearTimeout(timeout);
+          ws.close();
+          reject(new Error(update.error || 'Order execution failed'));
+        }
+      });
+
+      ws.on('error', (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+    });
+  }
 }
 
-// Usage
-const client = new ContinuumRelayerClient('http://localhost:8080');
-
-// Submit order
-const result = await client.submitOrder({
-  transaction: partiallySignedTx,
-  poolId,
-  amountIn,
-  minAmountOut,
-  isBaseInput: true,
-  userPublicKey: wallet.publicKey
-});
-
-// Monitor execution
-const ws = client.subscribeToOrder(result.orderId);
-ws.on('message', (data) => {
-  const update = JSON.parse(data.toString());
-  if (update.status === 'executed') {
-    console.log('Swap completed!', update.signature);
+// Usage example
+async function main() {
+  const client = new ContinuumRelayerClient('http://localhost:8085');
+  
+  // Check if relayer is healthy
+  const health = await client.checkHealth();
+  console.log('Relayer health:', health);
+  
+  // Get relayer info
+  const info = await client.getInfo();
+  console.log('Relayer address:', info.relayerAddress);
+  console.log('Supported pools:', info.supportedPools);
+  
+  // Submit an order (example with dummy transaction)
+  const connection = new Connection('http://localhost:8899');
+  const transaction = new Transaction();
+  // ... add your Continuum order instruction to transaction
+  
+  const result = await client.submitOrder({
+    transaction,
+    poolId: new PublicKey('BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2'),
+    amountIn: new BN(1000000000),
+    minAmountOut: new BN(950000000),
+    isBaseInput: true,
+    userPublicKey: wallet.publicKey
+  });
+  
+  console.log('Order submitted:', result.orderId);
+  console.log('Estimated execution time:', result.estimatedExecutionTime);
+  
+  // Wait for execution
+  try {
+    const execution = await client.waitForExecution(result.orderId);
+    console.log('Order executed!');
+    console.log('Transaction signature:', execution.signature);
+    console.log('Actual amount out:', execution.actualAmountOut);
+  } catch (error) {
+    console.error('Order failed:', error);
   }
-});
+}
+```
+
+### React Integration Example
+
+```tsx
+import { useState, useEffect } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+
+function SwapComponent() {
+  const wallet = useWallet();
+  const [relayerStatus, setRelayerStatus] = useState(null);
+  const [orderStatus, setOrderStatus] = useState(null);
+  
+  const RELAYER_URL = process.env.REACT_APP_RELAYER_URL || 'http://localhost:8085';
+  
+  // Check relayer status on mount
+  useEffect(() => {
+    fetch(`${RELAYER_URL}/health`)
+      .then(res => res.json())
+      .then(data => setRelayerStatus(data))
+      .catch(err => console.error('Relayer offline:', err));
+  }, []);
+  
+  const submitOrder = async () => {
+    try {
+      // Build your transaction here
+      const transaction = await buildContinuumTransaction();
+      
+      // Sign with wallet
+      const signedTx = await wallet.signTransaction(transaction);
+      
+      // Submit to relayer
+      const response = await fetch(`${RELAYER_URL}/api/v1/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transaction: signedTx.serialize().toString('base64'),
+          poolId: poolId.toBase58(),
+          amountIn: amountIn.toString(),
+          minAmountOut: minAmountOut.toString(),
+          isBaseInput: true,
+          userPublicKey: wallet.publicKey.toBase58()
+        })
+      });
+      
+      const result = await response.json();
+      setOrderStatus({ status: 'pending', ...result });
+      
+      // Monitor order via WebSocket
+      const ws = new WebSocket(
+        `${RELAYER_URL.replace('http', 'ws')}/ws/orders/${result.orderId}`
+      );
+      
+      ws.onmessage = (event) => {
+        const update = JSON.parse(event.data);
+        setOrderStatus(update);
+        
+        if (update.status === 'executed' || update.status === 'failed') {
+          ws.close();
+        }
+      };
+      
+    } catch (error) {
+      console.error('Order submission failed:', error);
+      setOrderStatus({ status: 'error', error: error.message });
+    }
+  };
+  
+  return (
+    <div>
+      <div>
+        Relayer Status: {relayerStatus?.status || 'Unknown'}
+      </div>
+      
+      <button onClick={submitOrder} disabled={!wallet.connected}>
+        Submit Order
+      </button>
+      
+      {orderStatus && (
+        <div>
+          Order Status: {orderStatus.status}
+          {orderStatus.signature && (
+            <a href={`https://solscan.io/tx/${orderStatus.signature}`}>
+              View Transaction
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 ```
 
 ## Deployment Options

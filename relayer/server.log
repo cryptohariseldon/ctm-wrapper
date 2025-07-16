@@ -1,0 +1,19 @@
+Generated new relayer keypair: ByDjc6nXScc8PwA8VHmeR3CjefKRs6jXyo6He3AYWCft
+🚀 Relayer server running on port 8085
+📡 HTTP: http://localhost:8085
+🔌 WebSocket: ws://localhost:8085
+💚 Health check: http://localhost:8085/health
+Received order submission: {
+  poolId: '54yDHfBB2NiSoXkLeqsRBoATxQQ6WKEsW87LT5jUBU7p',
+  amountIn: '1000000000',
+  minAmountOut: '950000000',
+  userPublicKey: 'CnCyGT8sPFZksTwfiACgaMg6Ni1VbXP8P3ENakkXD92H'
+}
+WebSocket connection established
+WebSocket connection closed
+Received order submission: {
+  poolId: 'BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2',
+  amountIn: '1000000000',
+  minAmountOut: '950000000',
+  userPublicKey: '9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM'
+}

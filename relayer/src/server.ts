@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { RelayerService } from './relayerService';
-import { config } from './config';
+import { config } from './config.simple';
 import winston from 'winston';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
@@ -442,7 +442,7 @@ async function start() {
     await relayerService.start();
 
     // Start HTTP server
-    const PORT = process.env.PORT || 8080;
+    const PORT = process.env.PORT || 8085;
     server.listen(PORT, () => {
       logger.info(`Relayer server listening on port ${PORT}`);
       logger.info(`WebSocket endpoint: ws://localhost:${PORT}/ws`);
