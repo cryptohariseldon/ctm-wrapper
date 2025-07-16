@@ -6,7 +6,8 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-continuum_cp_swap = "7HHRc5fBYLg6zaAGq2K5VE3bwhq39ZPXcPxumdHTyPg3"
+continuum_cp_swap = "A548C9LR926hnAWvYDjsXJddidhfzLf3bRb8dmYPgRKn"
+raydium_cp_swap = "GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp"
 
 [registry]
 url = "https://api.apr.dev"
