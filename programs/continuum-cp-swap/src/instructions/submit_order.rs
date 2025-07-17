@@ -48,12 +48,18 @@ pub fn submit_order(
     let order_state = &mut ctx.accounts.order_state;
     let clock = &ctx.accounts.clock;
     
-    // Increment sequence
-    let sequence = fifo_state.current_sequence + 1;
-    fifo_state.current_sequence = sequence;
+    // Get current sequence for PDA (before increment)
+    let pda_sequence = fifo_state.current_sequence;
+    msg!("Submit order - Current FIFO sequence: {}", pda_sequence);
     
-    // Store order details
-    order_state.sequence = sequence;
+    // Increment sequence for next order
+    let new_sequence = fifo_state.current_sequence + 1;
+    fifo_state.current_sequence = new_sequence;
+    msg!("Submit order - New FIFO sequence: {}", new_sequence);
+    
+    // Store order details with the incremented sequence
+    order_state.sequence = new_sequence;
+    msg!("Submit order - Order stored with sequence: {}", new_sequence);
     order_state.user = ctx.accounts.user.key();
     order_state.pool_id = ctx.accounts.pool_id.key();
     order_state.amount_in = amount_in;
@@ -64,14 +70,14 @@ pub fn submit_order(
     order_state.executed_at = None;
     
     emit!(OrderSubmitted {
-        sequence,
+        sequence: new_sequence,
         user: ctx.accounts.user.key(),
         pool_id: ctx.accounts.pool_id.key(),
         amount_in,
         is_base_input,
     });
     
-    msg!("Order {} submitted by user {}", sequence, ctx.accounts.user.key());
+    msg!("Order {} submitted by user {} (PDA uses sequence {})", new_sequence, ctx.accounts.user.key(), pda_sequence);
     
     Ok(())
 }

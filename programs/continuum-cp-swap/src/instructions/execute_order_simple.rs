@@ -8,8 +8,7 @@ use crate::state::*;
 use crate::errors::*;
 
 #[derive(Accounts)]
-#[instruction(expected_sequence: u64)]
-pub struct ExecuteOrder<'info> {
+pub struct ExecuteOrderSimple<'info> {
     #[account(
         seeds = [b"fifo_state"],
         bump,
@@ -17,16 +16,7 @@ pub struct ExecuteOrder<'info> {
     pub fifo_state: Account<'info, FifoState>,
     
     #[account(
-        mut,
-        seeds = [b"order", order_state.user.as_ref(), &expected_sequence.to_le_bytes()],
-        bump,
-        constraint = order_state.sequence == expected_sequence @ ContinuumError::InvalidSequence,
-        constraint = order_state.status == OrderStatus::Pending @ ContinuumError::InvalidOrderStatus,
-    )]
-    pub order_state: Account<'info, OrderState>,
-    
-    #[account(
-        seeds = [b"pool_registry", order_state.pool_id.as_ref()],
+        seeds = [b"pool_registry", pool_id.key().as_ref()],
         bump,
     )]
     pub pool_registry: Account<'info, CpSwapPoolRegistry>,
@@ -34,28 +24,35 @@ pub struct ExecuteOrder<'info> {
     /// The pool authority PDA that signs for the swap
     /// CHECK: This is a PDA that will be used to sign the CPI
     #[account(
-        seeds = [b"cp_pool_authority", order_state.pool_id.as_ref()],
+        seeds = [b"cp_pool_authority", pool_id.key().as_ref()],
         bump
     )]
     pub pool_authority: UncheckedAccount<'info>,
+    
+    /// CHECK: The pool to swap in
+    pub pool_id: UncheckedAccount<'info>,
     
     /// The relayer executing the order
     #[account(mut)]
     pub executor: Signer<'info>,
     
-    /// User's source token account (for input tokens)
-    #[account(
-        mut,
-        constraint = user_source.owner == order_state.user,
-    )]
-    pub user_source: Box<Account<'info, TokenAccount>>,
+    /// User performing the swap
+    /// CHECK: User account that owns the tokens
+    pub user: UncheckedAccount<'info>,
     
-    /// User's destination token account (for output tokens)
+    /// User's source token account
     #[account(
         mut,
-        constraint = user_destination.owner == order_state.user,
+        constraint = user_source.owner == user.key(),
     )]
-    pub user_destination: Box<Account<'info, TokenAccount>>,
+    pub user_source: Account<'info, TokenAccount>,
+    
+    /// User's destination token account
+    #[account(
+        mut,
+        constraint = user_destination.owner == user.key(),
+    )]
+    pub user_destination: Account<'info, TokenAccount>,
     
     /// CHECK: The CP-Swap program
     pub cp_swap_program: UncheckedAccount<'info>,
@@ -66,25 +63,21 @@ pub struct ExecuteOrder<'info> {
     // Remaining accounts are passed through to CP-Swap swap instruction
 }
 
-pub fn execute_order(
-    ctx: Context<ExecuteOrder>,
-    expected_sequence: u64,
+pub fn execute_order_simple(
+    ctx: Context<ExecuteOrderSimple>,
+    sequence: u64,
+    amount_in: u64,
+    min_amount_out: u64,
+    is_base_input: bool,
 ) -> Result<()> {
     let pool_authority_bump = ctx.bumps.pool_authority;
-    let pool_id = ctx.accounts.order_state.pool_id;
-    let sequence = ctx.accounts.order_state.sequence;
-    let user = ctx.accounts.order_state.user;
-    let is_base_input = ctx.accounts.order_state.is_base_input;
-    let amount_in = ctx.accounts.order_state.amount_in;
-    let min_amount_out = ctx.accounts.order_state.min_amount_out;
+    let pool_id = ctx.accounts.pool_id.key();
     
-    // Log sequence information for debugging
-    msg!("Execute order - Expected sequence param: {}, Order sequence: {}, Current FIFO sequence: {}", 
-        expected_sequence, 
+    msg!("Executing order {} for user {} on pool {}", 
         sequence,
-        ctx.accounts.fifo_state.current_sequence
+        ctx.accounts.user.key(),
+        pool_id
     );
-    msg!("Order user: {}, Order pool: {}", user, pool_id);
     
     // Build the swap instruction data
     let mut ix_data = Vec::new();
@@ -127,15 +120,12 @@ pub fn execute_order(
         data: ix_data,
     };
     
-    // Execute swap with pool authority signer
+    // Invoke CP-Swap with pool authority signer
     let pool_authority_seeds = &[
         b"cp_pool_authority",
         pool_id.as_ref(),
         &[pool_authority_bump],
     ];
-    
-    // Get the starting balance for calculating amount_out
-    let start_balance = ctx.accounts.user_destination.amount;
     
     invoke_signed(
         &ix,
@@ -143,23 +133,18 @@ pub fn execute_order(
             ctx.accounts.pool_authority.to_account_info(),
             ctx.accounts.user_source.to_account_info(),
             ctx.accounts.user_destination.to_account_info(),
-        ],
+        ]
+        .iter()
+        .chain(ctx.remaining_accounts.iter())
+        .cloned()
+        .collect::<Vec<_>>()[..],
         &[pool_authority_seeds],
     )?;
     
-    // Update order status
-    let order_state = &mut ctx.accounts.order_state;
-    order_state.status = OrderStatus::Executed;
-    order_state.executed_at = Some(ctx.accounts.clock.unix_timestamp);
-    
-    // Reload destination account to get final balance
-    ctx.accounts.user_destination.reload()?;
-    let amount_out = ctx.accounts.user_destination.amount - start_balance;
-    
     emit!(OrderExecuted {
         sequence,
-        user,
-        amount_out,
+        user: ctx.accounts.user.key(),
+        amount_out: 0, // TODO: Extract from return data
         executor: ctx.accounts.executor.key(),
     });
     

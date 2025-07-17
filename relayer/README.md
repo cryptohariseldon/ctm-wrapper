@@ -765,25 +765,110 @@ server {
 
 ## Troubleshooting
 
+### Connection Issues
+
+#### Cannot Connect to Relayer
+
+```bash
+# 1. Check if the service is running
+ps aux | grep "node.*server.js"
+
+# 2. Check if port 8085 is listening
+netstat -tlnp | grep 8085
+# or
+lsof -i :8085
+
+# 3. Test local connectivity
+curl -v http://localhost:8085/health
+
+# 4. Check firewall rules
+sudo ufw status
+# If firewall is blocking, allow port 8085:
+sudo ufw allow 8085
+
+# 5. Check logs
+tail -f server.log
+# or if using PM2:
+pm2 logs continuum-relayer
+```
+
+#### WebSocket Connection Issues
+
+```javascript
+// Test WebSocket with Node.js
+const WebSocket = require('ws');
+const ws = new WebSocket('ws://localhost:8085/ws/orders/test');
+
+ws.on('open', () => {
+  console.log('Connected!');
+  ws.close();
+});
+
+ws.on('error', (error) => {
+  console.error('WebSocket error:', error);
+});
+```
+
+#### CORS Issues
+
+If connecting from a browser and getting CORS errors:
+
+1. Update `.env` file:
+```env
+ALLOWED_ORIGINS=http://localhost:3000,https://yourapp.com
+```
+
+2. Or allow all origins (development only):
+```env
+ALLOWED_ORIGINS=*
+```
+
+3. Restart the relayer after changing configuration
+
 ### Common Issues
 
 1. **"Insufficient balance"**
-   - Fund the relayer wallet with SOL
-   - Check `RELAYER_FEE_BPS` is set correctly
+   ```bash
+   # Check relayer balance
+   solana balance $(cat relayer-keypair.json | solana address)
+   
+   # Fund the relayer
+   solana airdrop 1 $(cat relayer-keypair.json | solana address)
+   ```
 
 2. **"Transaction simulation failed"**
-   - Verify program IDs are correct
-   - Check RPC endpoint is accessible
-   - Ensure partial transaction is properly signed
+   - Verify program IDs match your deployment:
+   ```bash
+   # Check your .env file
+   grep PROGRAM_ID .env
+   ```
+   - Ensure RPC endpoint is accessible:
+   ```bash
+   curl -X POST http://localhost:8899 -H "Content-Type: application/json" \
+     -d '{"jsonrpc":"2.0","id":1,"method":"getHealth"}'
+   ```
 
-3. **"WebSocket connection failed"**
-   - Check firewall rules
-   - Verify WebSocket upgrade headers are passed through proxy
+3. **"Port already in use"**
+   ```bash
+   # Find process using port 8085
+   lsof -i :8085
+   # Kill the process
+   kill -9 <PID>
+   ```
 
-4. **High latency**
+4. **"Connection refused"**
+   - Check if relayer is running
+   - Verify correct port in .env
+   - Check localhost vs 127.0.0.1 vs 0.0.0.0
+
+5. **High latency**
    - Use a dedicated RPC node
    - Deploy relayer geographically close to RPC
-   - Tune performance settings
+   - Tune performance settings:
+   ```env
+   POLL_INTERVAL_MS=500
+   MAX_CONCURRENT_EXECUTIONS=10
+   ```
 
 ### Debug Mode
 
@@ -792,6 +877,61 @@ Enable verbose logging:
 ```env
 LOG_LEVEL=debug
 DEBUG=continuum:*
+```
+
+View detailed logs:
+```bash
+# If running directly
+tail -f logs/relayer.log | jq
+
+# If using PM2
+pm2 logs continuum-relayer --lines 100
+
+# If using Docker
+docker-compose logs -f relayer --tail=100
+```
+
+### Testing Relayer Response
+
+Create a test script `test-relayer.sh`:
+
+```bash
+#!/bin/bash
+
+RELAYER_URL="http://localhost:8085"
+
+echo "Testing Relayer at $RELAYER_URL"
+echo "================================"
+
+# Test health
+echo -n "Health check: "
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" $RELAYER_URL/health)
+if [ $STATUS -eq 200 ]; then
+    echo "✅ OK"
+else
+    echo "❌ Failed (HTTP $STATUS)"
+fi
+
+# Test API info
+echo -n "API info: "
+INFO=$(curl -s $RELAYER_URL/api/v1/info | jq -r .relayerAddress)
+if [ ! -z "$INFO" ]; then
+    echo "✅ OK (Relayer: $INFO)"
+else
+    echo "❌ Failed"
+fi
+
+# Test WebSocket
+echo -n "WebSocket: "
+timeout 2 wscat -c ws://localhost:8085/ws/orders/test 2>&1 | grep -q "Connected" && echo "✅ OK" || echo "❌ Failed"
+
+echo "================================"
+```
+
+Make it executable:
+```bash
+chmod +x test-relayer.sh
+./test-relayer.sh
 ```
 
 ## Support

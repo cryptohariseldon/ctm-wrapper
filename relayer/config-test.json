@@ -1,0 +1,16 @@
+{
+  "port": 8080,
+  "rpc": {
+    "endpoint": "http://localhost:8899",
+    "websocket": "ws://localhost:8900"
+  },
+  "relayer": {
+    "keypairPath": "./relayer-keypair-test.json",
+    "programId": "A548C9LR926hnAWvYDjsXJddidhfzLf3bRb8dmYPgRKn",
+    "cpSwapProgramId": "GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp"
+  },
+  "monitoring": {
+    "logLevel": "info",
+    "executionInterval": 5000
+  }
+}
