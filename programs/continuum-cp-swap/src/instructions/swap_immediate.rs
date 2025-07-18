@@ -19,6 +19,9 @@ pub struct SwapImmediate<'info> {
     /// CHECK: The CP-Swap program
     pub cp_swap_program: UncheckedAccount<'info>,
     
+    /// The user performing the swap
+    pub user: Signer<'info>,
+    
     // All other accounts (pool_authority, pool_id, user accounts, etc.) 
     // are passed through in remaining_accounts to avoid deserialization
 }
@@ -54,22 +57,19 @@ pub fn swap_immediate(
         ix_data.extend_from_slice(&amount_in.to_le_bytes()); // amount_out
     }
     
-    // Build account metas from remaining accounts
-    // First account should be pool authority (signer)
+    // Build account metas for CP-Swap
     let mut account_metas = vec![];
     
+    // First account must be the user (payer/signer for CP-Swap)
+    account_metas.push(AccountMeta::new_readonly(ctx.accounts.user.key(), true));
+    
     // Add all remaining accounts as they were passed
-    for (i, account) in ctx.remaining_accounts.iter().enumerate() {
-        if i == 0 {
-            // First account is pool authority, must be signer
-            account_metas.push(AccountMeta::new_readonly(account.key(), true));
+    for account in ctx.remaining_accounts.iter() {
+        account_metas.push(if account.is_writable {
+            AccountMeta::new(account.key(), false)
         } else {
-            account_metas.push(if account.is_writable {
-                AccountMeta::new(account.key(), false)
-            } else {
-                AccountMeta::new_readonly(account.key(), false)
-            });
-        }
+            AccountMeta::new_readonly(account.key(), false)
+        });
     }
     
     // Create the instruction
@@ -86,10 +86,14 @@ pub fn swap_immediate(
         &[pool_authority_bump],
     ];
     
-    // Pass all remaining accounts directly to invoke_signed
+    // Build accounts list for invoke_signed: user + remaining_accounts
+    let mut cpi_accounts = vec![ctx.accounts.user.to_account_info()];
+    cpi_accounts.extend_from_slice(ctx.remaining_accounts);
+    
+    // Pass all accounts to invoke_signed
     invoke_signed(
         &ix,
-        ctx.remaining_accounts,
+        &cpi_accounts,
         &[pool_authority_seeds],
     )?;
     

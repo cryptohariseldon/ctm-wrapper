@@ -1,0 +1,18 @@
+{
+  "poolId": "5Z1S86znnzFArBmbV6zQqodBcJLd6TQ4JNKtz28usWi4",
+  "ammConfig": "DeSAsR7D6n1CLQJX9QuAyq481tbDofMkFys5bMf7k9V9",
+  "ammConfigIndex": 1,
+  "tokenAMint": "3yYy6iUC73gAdi162WG2jZRyRxcyeJMHoXWJJoDw7zmW",
+  "tokenBMint": "J5QuWFGMJr2QeEoc8Z3nCbsCswsHP28zMzisRhguv5sn",
+  "tokenAVault": "6GpvG3tRxHq1bEQnRax3pCNMjBYizL7tZNwb6cR5VEGb",
+  "tokenBVault": "H7xBhWnk6U8zJm7R7EWQnpWC1fKdffe9jQbaPZ74oB7A",
+  "lpMint": "7HSxDac2rZAwVFkdgSfouKbTnTJZnypZDb6GZwb4t3Af",
+  "observationState": "Dzqe1L2HYZ6BkJJuh6rFfdmrKXL1ZMjwMCF7PGoWp9aH",
+  "creatorTokenA": "5EKz1W8DA9BtSJRDVqRJXqH1FeRqUWK3EP1j4C1Pcryr",
+  "creatorTokenB": "7TxD6EV3oppocJgeGguGtDGqsYi4UYW4GoMhVm1pENU4",
+  "creatorLp": "2XXjMtDwEatrwdULSUtpgQKnFbcYmkmitTvVdjG5bkTd",
+  "feeRate": 2500,
+  "tickSpacing": 10,
+  "cpPoolAuthority": "GoeQf6uakX6c9bKMaeQheXceRto4W2ucsf7Eaj5qyikW",
+  "authorityType": 1
+}
