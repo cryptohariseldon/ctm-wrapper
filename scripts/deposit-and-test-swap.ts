@@ -18,7 +18,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Configuration
-const POOL_CONFIG_FILE = path.join(__dirname, '../config/cp-pool.json');
+const POOL_CONFIG_FILE = path.join(__dirname, '../config/cp-pool-new.json');
 const TOKEN_CONFIG_FILE = path.join(__dirname, '../config/tokens.json');
 
 async function depositAndTestSwap() {
@@ -51,8 +51,8 @@ async function depositAndTestSwap() {
   const ammConfig = new PublicKey(poolConfig.ammConfig);
 
   console.log('Pool ID:', poolId.toBase58());
-  console.log('Token0 (USDC):', token0Mint.toBase58());
-  console.log('Token1 (WSOL):', token1Mint.toBase58());
+  console.log('Token0:', token0Mint.toBase58());
+  console.log('Token1:', token1Mint.toBase58());
 
   // Get user token accounts
   const userToken0 = await getAssociatedTokenAddress(token0Mint, payerKeypair.publicKey);

@@ -1,0 +1,18 @@
+{
+  "poolId": "4QFygBUd6gT7b1e6QtNBoP1W2pVf4UjU19ZCNQ1tC1ix",
+  "ammConfig": "5XoBUe5w3xSjRMgaPSwyA2ujH7eBBH5nD5L9H2ws841B",
+  "tokenAMint": "cVkeC5Y2Cw5d4K4XsCkHZPL8WuVXrta7S5V6SFWu1AT",
+  "tokenBMint": "FbKKaLfQBG16fAUkqFfB64JRPwyJxe7dg4jGqUV3us15",
+  "tokenAVault": "HfoMkWdq4HPAH3udMTDW7f4wrXanNUAcKnhNyazR1iiG",
+  "tokenBVault": "7ktqFuWBFr8ogXo2YKrGEJpt4vFodBJP78XZv9QLodrY",
+  "lpMint": "AbpeTDESsCnPgHELWPjVE8Ww9cKLjz15LbXXq8wxrWoX",
+  "observationState": "HcCJ3HjrAWuaNZQs9nfmCoJYgc3FxpLDYu6wJwfDtemU",
+  "creatorTokenA": "BjBJJYEdQxhqAx82nycpQep7BZ2RtMdj4Q9MCwPHgqKP",
+  "creatorTokenB": "9CZrfSLTvPjLBDPErhQE34fPuQ8DMAYAjtqpJEXFUEuX",
+  "creatorLp": "FLpefh4BSwmUWZxtD8hM7RvSwHsGgi1FC2XyjtD8n6CJ",
+  "feeRate": 2500,
+  "tickSpacing": 10,
+  "initialPrice": "WSOL/USDC",
+  "cpPoolAuthority": "HS16ukimVrh94Hi65chaTWBeCUwMzve27ZsX313SUGLg",
+  "authorityType": 1
+}

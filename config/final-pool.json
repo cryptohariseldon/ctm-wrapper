@@ -1,0 +1,13 @@
+{
+  "poolId": "Gdpa1W2qH8Q5XxXmt5pm3VNwcYdgtAzT7GfFNxpLu683",
+  "ammConfig": "5XoBUe5w3xSjRMgaPSwyA2ujH7eBBH5nD5L9H2ws841B",
+  "ammConfigIndex": 0,
+  "tokenAMint": "8m4ZtQeeqE1WriuW5raCcVQujS1zVGTFwDHFzjeRZ4qP",
+  "tokenBMint": "GsWKsvHYWVfWa1rKTdMKm2HJorcAg3gLRVRepsJPHva7",
+  "tokenAVault": "XCnXQgicrRgDYtxEQHRKBa2atSJcUKGixRtjn7SpAZ1",
+  "tokenBVault": "ALTDncmg2rbcYg43GZWtRPSvbUjdLpWxhhMW5XQwnLK8",
+  "lpMint": "GQjAyeVNQCMYerC3rcytmjwdLgQFGD5JGcZcMCHpSQRD",
+  "observationState": "G5wgJVpZZ9v1g44FQwVPZ2r67qwC7fKvzGN4fn7QgGNn",
+  "cpPoolAuthority": "2BcneJZb8PfzXE7U8EsJuygS5vu4FwKKjyLHRrkVenJM",
+  "status": "existing"
+}

@@ -12,10 +12,7 @@ import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
-  getAccount,
-  createSyncNativeInstruction,
-  NATIVE_MINT
+  createAssociatedTokenAccountInstruction
 } from '@solana/spl-token';
 import * as anchor from '@coral-xyz/anchor';
 import { BN } from '@coral-xyz/anchor';
@@ -24,7 +21,7 @@ import path from 'path';
 
 // Configuration
 const TOKEN_CONFIG_FILE = path.join(__dirname, '../config/tokens.json');
-const POOL_CONFIG_FILE = path.join(__dirname, '../config/cp-pool-new.json');
+const POOL_CONFIG_FILE = path.join(__dirname, '../config/config4.json');
 const connection = new Connection('http://localhost:8899', 'confirmed');
 
 // Program IDs
@@ -38,27 +35,8 @@ const POOL_VAULT_SEED = Buffer.from('pool_vault');
 const POOL_LP_MINT_SEED = Buffer.from('pool_lp_mint');
 const POOL_OBSERVATION_SEED = Buffer.from('observation');
 
-interface CpPoolConfig {
-  poolId: string;
-  ammConfig: string;
-  tokenAMint: string;
-  tokenBMint: string;
-  tokenAVault: string;
-  tokenBVault: string;
-  lpMint: string;
-  observationState: string;
-  creatorTokenA: string;
-  creatorTokenB: string;
-  creatorLp: string;
-  feeRate: number;
-  tickSpacing: number;
-  initialPrice: string;
-  cpPoolAuthority: string;
-  authorityType: number;
-}
-
-async function createCpSwapPool() {
-  console.log('Creating CP-Swap pool on localnet...\n');
+async function createNewPoolConfig4() {
+  console.log('Creating new CP-Swap pool with new AMM config for config4.json...\n');
 
   // Load token configuration
   const tokenConfig = JSON.parse(fs.readFileSync(TOKEN_CONFIG_FILE, 'utf8'));
@@ -76,61 +54,48 @@ async function createCpSwapPool() {
   let token1Mint: PublicKey;
   let token0Decimals: number;
   let token1Decimals: number;
-  let token0Symbol: string;
-  let token1Symbol: string;
   if (usdcMint.toBuffer().compare(wsolMint.toBuffer()) < 0) {
     token0Mint = usdcMint;
     token1Mint = wsolMint;
     token0Decimals = tokenConfig.decimals.usdc;
     token1Decimals = tokenConfig.decimals.wsol;
-    token0Symbol = 'USDC';
-    token1Symbol = 'WSOL';
     console.log('Token ordering: USDC is token0, WSOL is token1');
   } else {
     token0Mint = wsolMint;
     token1Mint = usdcMint;
     token0Decimals = tokenConfig.decimals.wsol;
     token1Decimals = tokenConfig.decimals.usdc;
-    token0Symbol = 'WSOL';
-    token1Symbol = 'USDC';
     console.log('Token ordering: WSOL is token0, USDC is token1');
   }
 
-  // AMM Config parameters
-  const feeRate = 2500; // 0.25% fee (2500 / 1_000_000)
-  const tickSpacing = 10; // Standard tick spacing
-
-  // Derive AMM config PDA with index 0
-  const ammConfigIndex = 0;
+  // Use a new AMM config index
+  const ammConfigIndex = 1; // Use index 1 instead of 0
   const [ammConfig] = PublicKey.findProgramAddressSync(
-    [AMM_CONFIG_SEED, new BN(ammConfigIndex).toArrayLike(Buffer, 'le', 2)],
+    [AMM_CONFIG_SEED, new BN(ammConfigIndex).toArrayLike(Buffer, 'be', 2)], // big-endian!
     CP_SWAP_PROGRAM_ID
   );
-  console.log('AMM Config PDA:', ammConfig.toBase58());
+  console.log('AMM Config PDA (index', ammConfigIndex, '):', ammConfig.toBase58());
 
-  // Step 1: Create AMM config if it doesn't exist
-  try {
-    const ammConfigAccount = await connection.getAccountInfo(ammConfig);
-    if (!ammConfigAccount) {
-      console.log('\nCreating AMM config...');
-      
-      const createConfigIx = buildCreateAmmConfigInstruction(
-        CP_SWAP_PROGRAM_ID,
-        ammConfig,
-        payerKeypair.publicKey,
-        ammConfigIndex,
-        feeRate,
-        tickSpacing
-      );
+  // Step 1: Create AMM config
+  const ammConfigAccount = await connection.getAccountInfo(ammConfig);
+  if (!ammConfigAccount) {
+    console.log('\nCreating AMM config...');
+    
+    const feeRate = 2500; // 0.25% fee
+    const createConfigIx = buildCreateAmmConfigInstruction(
+      CP_SWAP_PROGRAM_ID,
+      ammConfig,
+      payerKeypair.publicKey,
+      ammConfigIndex,
+      feeRate,
+      10
+    );
 
-      const tx = new Transaction().add(createConfigIx);
-      const sig = await sendAndConfirmTransaction(connection, tx, [payerKeypair]);
-      console.log('AMM config created:', sig);
-    } else {
-      console.log('AMM config already exists');
-    }
-  } catch (err) {
-    console.error('Error creating AMM config:', err);
+    const tx = new Transaction().add(createConfigIx);
+    const sig = await sendAndConfirmTransaction(connection, tx, [payerKeypair]);
+    console.log('AMM config created:', sig);
+  } else {
+    console.log('AMM config already exists');
   }
 
   // Derive pool PDA
@@ -173,7 +138,7 @@ async function createCpSwapPool() {
   const userToken1Account = await getAssociatedTokenAddress(token1Mint, payerKeypair.publicKey);
   const userLpAccount = await getAssociatedTokenAddress(lpMint, payerKeypair.publicKey);
 
-  // Create fee account if needed
+  // Create fee account
   const feeOwner = new PublicKey('GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq');
   const feeAccount = await getAssociatedTokenAddress(token0Mint, feeOwner);
   
@@ -190,83 +155,72 @@ async function createCpSwapPool() {
     await sendAndConfirmTransaction(connection, tx, [payerKeypair]);
   }
 
+  // Derive Continuum's cp_pool_authority PDA
+  const [cpPoolAuthority] = PublicKey.findProgramAddressSync(
+    [Buffer.from('cp_pool_authority'), poolId.toBuffer()],
+    CONTINUUM_PROGRAM_ID
+  );
+
   // Step 2: Initialize pool
-  try {
-    const poolAccount = await connection.getAccountInfo(poolId);
-    if (!poolAccount) {
-      console.log('\nInitializing pool...');
+  const poolAccount = await connection.getAccountInfo(poolId);
+  if (!poolAccount) {
+    console.log('\nInitializing pool...');
 
-      // Calculate initial amounts
-      const initAmount0 = new BN(10000 * Math.pow(10, token0Decimals)); // 10,000 of token0
-      const initAmount1 = new BN(10000 * Math.pow(10, token1Decimals)); // 10,000 of token1
+    // Calculate initial amounts
+    const initAmount0 = new BN(10000 * Math.pow(10, token0Decimals)); 
+    const initAmount1 = new BN(10000 * Math.pow(10, token1Decimals));
 
-      // Derive Continuum's cp_pool_authority PDA
-      const [cpPoolAuthority] = PublicKey.findProgramAddressSync(
-        [Buffer.from('cp_pool_authority'), poolId.toBuffer()],
-        CONTINUUM_PROGRAM_ID
-      );
-      console.log('Setting custom authority to Continuum cp_pool_authority:', cpPoolAuthority.toBase58());
+    console.log('Setting custom authority to Continuum cp_pool_authority:', cpPoolAuthority.toBase58());
 
-      const initPoolIx = await buildInitializePoolInstruction(
-        CP_SWAP_PROGRAM_ID,
-        poolId,
-        ammConfig,
-        token0Mint,
-        token1Mint,
-        token0Vault,
-        token1Vault,
-        lpMint,
-        observationState,
-        payerKeypair.publicKey,
-        initAmount0,
-        initAmount1,
-        cpPoolAuthority
-      );
+    const initPoolIx = await buildInitializePoolInstruction(
+      CP_SWAP_PROGRAM_ID,
+      poolId,
+      ammConfig,
+      token0Mint,
+      token1Mint,
+      token0Vault,
+      token1Vault,
+      lpMint,
+      observationState,
+      payerKeypair.publicKey,
+      initAmount0,
+      initAmount1,
+      cpPoolAuthority
+    );
 
-      const tx = new Transaction()
-        .add(initPoolIx);
-
-      const sig = await sendAndConfirmTransaction(connection, tx, [payerKeypair], {
-        skipPreflight: false,
-        commitment: 'confirmed'
-      });
-      console.log('Pool initialized with liquidity:', sig);
-      
-      // Save updated pool configuration
-      const poolConfig: CpPoolConfig = {
-        poolId: poolId.toBase58(),
-        ammConfig: ammConfig.toBase58(),
-        tokenAMint: token0Mint.toBase58(),
-        tokenBMint: token1Mint.toBase58(),
-        tokenAVault: token0Vault.toBase58(),
-        tokenBVault: token1Vault.toBase58(),
-        lpMint: lpMint.toBase58(),
-        observationState: observationState.toBase58(),
-        creatorTokenA: userToken0Account.toBase58(),
-        creatorTokenB: userToken1Account.toBase58(),
-        creatorLp: userLpAccount.toBase58(),
-        feeRate,
-        tickSpacing,
-        initialPrice: `${token0Symbol}/${token1Symbol}`,
-        cpPoolAuthority: cpPoolAuthority.toBase58(),
-        authorityType: 1
-      };
-
-      fs.writeFileSync(POOL_CONFIG_FILE, JSON.stringify(poolConfig, null, 2));
-      console.log('\nPool configuration saved to:', POOL_CONFIG_FILE);
-
-    } else {
-      console.log('Pool already exists');
-    }
-  } catch (err) {
-    console.error('Error creating pool:', err);
-    if (err.logs) {
-      console.error('Transaction logs:', err.logs);
-    }
+    const tx = new Transaction().add(initPoolIx);
+    const sig = await sendAndConfirmTransaction(connection, tx, [payerKeypair], {
+      skipPreflight: false,
+      commitment: 'confirmed'
+    });
+    console.log('Pool initialized with liquidity:', sig);
+  } else {
+    console.log('Pool already exists');
   }
 
-  console.log('\n✅ CP-Swap pool creation complete!');
-  console.log('Pool ID:', poolId.toBase58());
+  // Save pool configuration
+  const poolConfig = {
+    poolId: poolId.toBase58(),
+    ammConfig: ammConfig.toBase58(),
+    ammConfigIndex: ammConfigIndex,
+    tokenAMint: token0Mint.toBase58(),
+    tokenBMint: token1Mint.toBase58(),
+    tokenAVault: token0Vault.toBase58(),
+    tokenBVault: token1Vault.toBase58(),
+    lpMint: lpMint.toBase58(),
+    observationState: observationState.toBase58(),
+    creatorTokenA: userToken0Account.toBase58(),
+    creatorTokenB: userToken1Account.toBase58(),
+    creatorLp: userLpAccount.toBase58(),
+    feeRate: 2500,
+    tickSpacing: 10,
+    cpPoolAuthority: cpPoolAuthority.toBase58(),
+    authorityType: 1
+  };
+
+  fs.writeFileSync(POOL_CONFIG_FILE, JSON.stringify(poolConfig, null, 2));
+  console.log('\nPool configuration saved to:', POOL_CONFIG_FILE);
+  console.log('\n✅ New pool creation complete!');
 }
 
 // Helper function to build create AMM config instruction
@@ -317,7 +271,7 @@ async function buildInitializePoolInstruction(
   initAmount1: BN,
   customAuthority: PublicKey
 ): Promise<anchor.web3.TransactionInstruction> {
-  // initialize discriminator [175, 175, 109, 31, 13, 152, 155, 237]
+  // initialize discriminator
   const discriminator = Buffer.from([175, 175, 109, 31, 13, 152, 155, 237]);
   
   const data = Buffer.concat([
@@ -341,7 +295,7 @@ async function buildInitializePoolInstruction(
   const creatorToken1 = await getAssociatedTokenAddress(token1Mint, creator);
   const creatorLpToken = await getAssociatedTokenAddress(lpMint, creator);
   
-  // Create pool fee receiver (using WSOL as fee token)
+  // Create pool fee receiver
   const feeOwner = new PublicKey('GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq');
   const createPoolFee = await getAssociatedTokenAddress(token0Mint, feeOwner);
 
@@ -373,51 +327,9 @@ async function buildInitializePoolInstruction(
   });
 }
 
-// Helper function to build deposit instruction
-function buildDepositInstruction(
-  programId: PublicKey,
-  poolId: PublicKey,
-  lpMint: PublicKey,
-  userToken0: PublicKey,
-  userToken1: PublicKey,
-  userLp: PublicKey,
-  token0Vault: PublicKey,
-  token1Vault: PublicKey,
-  owner: PublicKey,
-  amount0Max: BN,
-  amount1Max: BN,
-  minLpAmount: BN
-): anchor.web3.TransactionInstruction {
-  // deposit discriminator [242, 35, 198, 137, 82, 225, 242, 182]
-  const discriminator = Buffer.from([242, 35, 198, 137, 82, 225, 242, 182]);
-  
-  const data = Buffer.concat([
-    discriminator,
-    minLpAmount.toArrayLike(Buffer, 'le', 8), // lp_token_amount
-    amount0Max.toArrayLike(Buffer, 'le', 8), // maximum_token_0_amount
-    amount1Max.toArrayLike(Buffer, 'le', 8), // maximum_token_1_amount
-  ]);
-
-  return new anchor.web3.TransactionInstruction({
-    keys: [
-      { pubkey: owner, isSigner: true, isWritable: false },
-      { pubkey: poolId, isSigner: false, isWritable: true },
-      { pubkey: lpMint, isSigner: false, isWritable: true },
-      { pubkey: userToken0, isSigner: false, isWritable: true },
-      { pubkey: userToken1, isSigner: false, isWritable: true },
-      { pubkey: userLp, isSigner: false, isWritable: true },
-      { pubkey: token0Vault, isSigner: false, isWritable: true },
-      { pubkey: token1Vault, isSigner: false, isWritable: true },
-      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-    ],
-    programId,
-    data,
-  });
-}
-
 // Run if called directly
 if (require.main === module) {
-  createCpSwapPool()
+  createNewPoolConfig4()
     .then(() => process.exit(0))
     .catch(err => {
       console.error('Error:', err);
@@ -425,4 +337,4 @@ if (require.main === module) {
     });
 }
 
-export { createCpSwapPool };
+export { createNewPoolConfig4 };
