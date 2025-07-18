@@ -119,9 +119,9 @@ async function testSwapDebug() {
         cpSwapProgram: CP_SWAP_PROGRAM_ID,
       })
       .remainingAccounts([
-        // Accounts for CP-Swap CPI
-        { pubkey: poolAuthority, isSigner: false, isWritable: false }, // Will be signed by CPI
-        { pubkey: cpSwapAuthority, isSigner: false, isWritable: false },
+        // Accounts for CP-Swap CPI - user must be first
+        { pubkey: wallet.publicKey, isSigner: true, isWritable: false }, // User (payer for CP-Swap)
+        { pubkey: cpSwapAuthority, isSigner: false, isWritable: false }, // CP-Swap vault authority
         { pubkey: ammConfig, isSigner: false, isWritable: false },
         { pubkey: poolId, isSigner: false, isWritable: true },
         { pubkey: userUsdcAccount, isSigner: false, isWritable: true },

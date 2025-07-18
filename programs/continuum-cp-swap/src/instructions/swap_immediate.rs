@@ -19,10 +19,7 @@ pub struct SwapImmediate<'info> {
     /// CHECK: The CP-Swap program
     pub cp_swap_program: UncheckedAccount<'info>,
     
-    /// The user performing the swap
-    pub user: Signer<'info>,
-    
-    // All other accounts (pool_authority, pool_id, user accounts, etc.) 
+    // All other accounts (user, pool_authority, pool_id, user accounts, etc.) 
     // are passed through in remaining_accounts to avoid deserialization
 }
 
@@ -57,19 +54,22 @@ pub fn swap_immediate(
         ix_data.extend_from_slice(&amount_in.to_le_bytes()); // amount_out
     }
     
-    // Build account metas for CP-Swap
+    // Build account metas from remaining accounts
+    // The client must pass accounts in the correct order for CP-Swap
     let mut account_metas = vec![];
     
-    // First account must be the user (payer/signer for CP-Swap)
-    account_metas.push(AccountMeta::new_readonly(ctx.accounts.user.key(), true));
-    
     // Add all remaining accounts as they were passed
-    for account in ctx.remaining_accounts.iter() {
-        account_metas.push(if account.is_writable {
-            AccountMeta::new(account.key(), false)
+    for (i, account) in ctx.remaining_accounts.iter().enumerate() {
+        // First account should be the user (payer for CP-Swap)
+        if i == 0 {
+            account_metas.push(AccountMeta::new_readonly(account.key(), true));
         } else {
-            AccountMeta::new_readonly(account.key(), false)
-        });
+            account_metas.push(if account.is_writable {
+                AccountMeta::new(account.key(), false)
+            } else {
+                AccountMeta::new_readonly(account.key(), false)
+            });
+        }
     }
     
     // Create the instruction
@@ -86,14 +86,11 @@ pub fn swap_immediate(
         &[pool_authority_bump],
     ];
     
-    // Build accounts list for invoke_signed: user + remaining_accounts
-    let mut cpi_accounts = vec![ctx.accounts.user.to_account_info()];
-    cpi_accounts.extend_from_slice(ctx.remaining_accounts);
-    
-    // Pass all accounts to invoke_signed
+    // Pass all remaining accounts directly to invoke_signed
+    // The client must ensure the correct ordering
     invoke_signed(
         &ix,
-        &cpi_accounts,
+        ctx.remaining_accounts,
         &[pool_authority_seeds],
     )?;
     
