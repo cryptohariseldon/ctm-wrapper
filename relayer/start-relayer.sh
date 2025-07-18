@@ -71,11 +71,11 @@ RELAYER_KEYPAIR_PATH=./relayer-keypair.json
 RELAYER_FEE_BPS=10
 
 # Program IDs
-CONTINUUM_PROGRAM_ID=A548C9LR926hnAWvYDjsXJddidhfzLf3bRb8dmYPgRKn
+CONTINUUM_PROGRAM_ID=EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq
 CP_SWAP_PROGRAM_ID=GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
 
 # Server Configuration
-PORT=8080
+PORT=8086
 ALLOWED_ORIGINS=*
 
 # Performance Settings
@@ -90,6 +90,17 @@ MAX_ORDER_SIZE=1000000000000
 
 # Logging
 LOG_LEVEL=info
+
+# Features
+ENABLE_MOCK_MODE=false
+ENABLE_AIRDROP=true
+AIRDROP_AMOUNT_SOL=1
+AIRDROP_RATE_LIMIT_MS=60000
+
+# Transaction Settings
+PRIORITY_FEE_LEVEL=medium
+COMPUTE_UNIT_LIMIT=400000
+CONFIRMATION_TIMEOUT_MS=60000
 
 # Redis (optional)
 # REDIS_URL=redis://localhost:6379
@@ -264,11 +275,12 @@ show_status() {
     fi
     
     # Check HTTP endpoint
-    if curl -s http://localhost:8080/health > /dev/null 2>&1; then
-        echo -e "${GREEN}HTTP API: Running on http://localhost:8080${NC}"
-        echo -e "${GREEN}WebSocket: Available on ws://localhost:8080/ws${NC}"
+    PORT=$(grep PORT "$CONFIG_FILE" | cut -d'=' -f2 || echo "8086")
+    if curl -s http://localhost:$PORT/health > /dev/null 2>&1; then
+        echo -e "${GREEN}HTTP API: Running on http://localhost:$PORT${NC}"
+        echo -e "${GREEN}WebSocket: Available on ws://localhost:$PORT/ws${NC}"
     else
-        echo -e "${RED}Service not responding on port 8080${NC}"
+        echo -e "${RED}Service not responding on port $PORT${NC}"
     fi
 }
 
@@ -277,9 +289,9 @@ main() {
     case "$1" in
         "start")
             check_prerequisites
+            install_dependencies
             check_keypair
             check_balance
-            install_dependencies
             build_project
             
             case "$RELAYER_MODE" in

@@ -67,6 +67,8 @@ let relayerWallet;
 let connection;
 // WebSocket connections tracking
 const wsClients = new Map();
+// Airdrop rate limiting tracking
+const airdropLastRequest = new Map();
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({
@@ -80,11 +82,11 @@ app.get('/health', (req, res) => {
 app.get('/api/v1/info', (req, res) => {
     res.json({
         relayerAddress: relayerWallet.publicKey.toBase58(),
-        continuumProgram: config_1.config.CONTINUUM_PROGRAM_ID,
-        cpSwapProgram: config_1.config.CP_SWAP_PROGRAM_ID,
-        fee: config_1.config.RELAYER_FEE_BPS || 0,
-        minOrderSize: config_1.config.MIN_ORDER_SIZE || '0',
-        maxOrderSize: config_1.config.MAX_ORDER_SIZE || '1000000000000',
+        continuumProgram: config_1.config.continuumProgramId.toBase58(),
+        cpSwapProgram: config_1.config.cpSwapProgramId.toBase58(),
+        fee: 0, // TODO: Add relayerFeeBps to config if needed
+        minOrderSize: '0', // TODO: Add minOrderSize to config if needed
+        maxOrderSize: '1000000000000', // TODO: Add maxOrderSize to config if needed
         supportedPools: relayerService.getSupportedPools(),
         performance: {
             successRate: relayerService.getSuccessRate(),
@@ -174,7 +176,7 @@ app.post('/api/v1/orders', async (req, res) => {
             });
         }
         res.status(500).json({
-            error: error.message || 'Internal server error'
+            error: error instanceof Error ? error.message : 'Internal server error'
         });
     }
 });
@@ -225,7 +227,8 @@ app.delete('/api/v1/orders/:orderId', async (req, res) => {
     catch (error) {
         logger.error('Order cancellation failed', error);
         res.status(500).json({
-            error: 'Failed to cancel order'
+            error: 'Failed to cancel order',
+            message: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -262,6 +265,171 @@ app.get('/api/v1/stats', async (req, res) => {
         logger.error('Failed to get statistics', error);
         res.status(500).json({
             error: 'Failed to retrieve statistics'
+        });
+    }
+});
+// Get current pool price
+app.get('/api/v1/pools/:poolId/price', async (req, res) => {
+    try {
+        const { poolId } = req.params;
+        // Validate pool ID
+        try {
+            new web3_js_1.PublicKey(poolId);
+        }
+        catch {
+            return res.status(400).json({
+                error: 'Invalid pool ID'
+            });
+        }
+        // Find pool configuration
+        const poolConfig = config_1.config.supportedPools.find(p => p.poolId === poolId);
+        if (!poolConfig) {
+            return res.status(404).json({
+                error: 'Pool not found'
+            });
+        }
+        // Fetch pool state from CP-Swap
+        const poolPubkey = new web3_js_1.PublicKey(poolId);
+        const poolAccount = await connection.getAccountInfo(poolPubkey);
+        if (!poolAccount) {
+            return res.status(404).json({
+                error: 'Pool account not found on chain'
+            });
+        }
+        // Fetch vault balances
+        const [tokenAVault, tokenBVault] = await Promise.all([
+            connection.getTokenAccountBalance(new web3_js_1.PublicKey(poolConfig.tokenAVault)),
+            connection.getTokenAccountBalance(new web3_js_1.PublicKey(poolConfig.tokenBVault))
+        ]);
+        const tokenABalance = Number(tokenAVault.value.amount);
+        const tokenBBalance = Number(tokenBVault.value.amount);
+        // Calculate prices accounting for decimals
+        const tokenAUiAmount = tokenABalance / Math.pow(10, poolConfig.tokenADecimals);
+        const tokenBUiAmount = tokenBBalance / Math.pow(10, poolConfig.tokenBDecimals);
+        // Price calculations
+        const tokenAPerTokenB = tokenAUiAmount / tokenBUiAmount;
+        const tokenBPerTokenA = tokenBUiAmount / tokenAUiAmount;
+        const response = {
+            poolId,
+            tokenA: {
+                mint: poolConfig.tokenAMint,
+                symbol: poolConfig.tokenASymbol,
+                decimals: poolConfig.tokenADecimals,
+                balance: tokenABalance,
+                uiAmount: tokenAUiAmount
+            },
+            tokenB: {
+                mint: poolConfig.tokenBMint,
+                symbol: poolConfig.tokenBSymbol,
+                decimals: poolConfig.tokenBDecimals,
+                balance: tokenBBalance,
+                uiAmount: tokenBUiAmount
+            },
+            price: {
+                [`${poolConfig.tokenASymbol}Per${poolConfig.tokenBSymbol}`]: tokenAPerTokenB.toFixed(6),
+                [`${poolConfig.tokenBSymbol}Per${poolConfig.tokenASymbol}`]: tokenBPerTokenA.toFixed(6)
+            },
+            liquidity: {
+                tokenA: tokenABalance,
+                tokenB: tokenBBalance,
+                totalValueUSD: null // Can be calculated if we have USD prices
+            },
+            lastUpdate: new Date().toISOString()
+        };
+        res.json(response);
+    }
+    catch (error) {
+        logger.error('Failed to get pool price', error);
+        res.status(500).json({
+            error: 'Failed to fetch pool price',
+            message: error.message
+        });
+    }
+});
+// Airdrop endpoint (for testing)
+app.post('/api/v1/airdrop', async (req, res) => {
+    try {
+        // Check if airdrop is enabled
+        if (!config_1.config.enableAirdrop) {
+            return res.status(403).json({
+                error: 'Airdrop is disabled'
+            });
+        }
+        // Validate request
+        const airdropSchema = zod_1.z.object({
+            address: zod_1.z.string().refine(addr => {
+                try {
+                    new web3_js_1.PublicKey(addr);
+                    return true;
+                }
+                catch {
+                    return false;
+                }
+            }, 'Invalid public key'),
+            amount: zod_1.z.number().optional()
+        });
+        const params = airdropSchema.parse(req.body);
+        const recipientPubkey = new web3_js_1.PublicKey(params.address);
+        const amountLamports = params.amount || (config_1.config.airdropAmountSol * 1e9);
+        // Check rate limit
+        const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+        const lastRequest = airdropLastRequest.get(clientIp) || 0;
+        const now = Date.now();
+        if (now - lastRequest < config_1.config.airdropRateLimitMs) {
+            const remainingTime = Math.ceil((config_1.config.airdropRateLimitMs - (now - lastRequest)) / 1000);
+            return res.status(429).json({
+                error: `Rate limited. Please wait ${remainingTime} seconds before requesting another airdrop`
+            });
+        }
+        // Validate amount
+        const maxAmount = 10 * 1e9; // 10 SOL max
+        if (amountLamports < 0 || amountLamports > maxAmount) {
+            return res.status(400).json({
+                error: `Invalid amount. Must be between 0 and ${maxAmount / 1e9} SOL`
+            });
+        }
+        logger.info('Processing airdrop request', {
+            recipient: recipientPubkey.toBase58(),
+            amount: amountLamports / 1e9,
+            ip: clientIp
+        });
+        // Request airdrop
+        const signature = await connection.requestAirdrop(recipientPubkey, amountLamports);
+        // Wait for confirmation
+        const latestBlockhash = await connection.getLatestBlockhash();
+        await connection.confirmTransaction({
+            signature,
+            blockhash: latestBlockhash.blockhash,
+            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+        });
+        // Update rate limit
+        airdropLastRequest.set(clientIp, now);
+        // Get new balance
+        const newBalance = await connection.getBalance(recipientPubkey);
+        res.json({
+            success: true,
+            signature,
+            amount: amountLamports,
+            recipient: recipientPubkey.toBase58(),
+            newBalance
+        });
+        logger.info('Airdrop successful', {
+            signature,
+            recipient: recipientPubkey.toBase58(),
+            amount: amountLamports / 1e9
+        });
+    }
+    catch (error) {
+        logger.error('Airdrop failed', error);
+        if (error instanceof Error && error.name === 'ZodError') {
+            return res.status(400).json({
+                error: 'Invalid request',
+                details: error.errors
+            });
+        }
+        res.status(500).json({
+            error: 'Airdrop failed',
+            message: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -335,25 +503,10 @@ async function start() {
     try {
         // Load configuration
         logger.info('Starting Continuum relayer service...');
-        // Initialize connection
-        connection = new web3_js_1.Connection(config_1.config.RPC_URL, {
-            commitment: 'confirmed',
-            wsEndpoint: config_1.config.WS_URL
-        });
-        // Load relayer keypair
-        const keypairPath = config_1.config.RELAYER_KEYPAIR_PATH || './relayer-keypair.json';
-        try {
-            const keypairData = require(keypairPath);
-            relayerWallet = web3_js_1.Keypair.fromSecretKey(new Uint8Array(keypairData));
-        }
-        catch (error) {
-            logger.error('Failed to load relayer keypair', error);
-            logger.info('Generating new relayer keypair...');
-            relayerWallet = web3_js_1.Keypair.generate();
-            // Save for future use
-            const fs = require('fs');
-            fs.writeFileSync(keypairPath, JSON.stringify(Array.from(relayerWallet.secretKey)));
-        }
+        // Initialize connection - config.connection is already a Connection object
+        connection = config_1.config.connection;
+        // Load relayer keypair - config.relayerKeypair is already a Keypair object
+        relayerWallet = config_1.config.relayerKeypair;
         logger.info('Relayer address:', relayerWallet.publicKey.toBase58());
         // Check relayer balance
         const balance = await connection.getBalance(relayerWallet.publicKey);
@@ -362,7 +515,7 @@ async function start() {
             logger.warn('Low relayer balance! Please fund the relayer wallet.');
         }
         // Initialize relayer service
-        relayerService = new relayerService_1.RelayerService(connection, relayerWallet, new web3_js_1.PublicKey(config_1.config.CONTINUUM_PROGRAM_ID), new web3_js_1.PublicKey(config_1.config.CP_SWAP_PROGRAM_ID), logger);
+        relayerService = new relayerService_1.RelayerService(connection, relayerWallet, config_1.config.continuumProgramId, config_1.config.cpSwapProgramId, logger);
         // Set up order execution callbacks
         relayerService.on('orderExecuted', (orderId, result) => {
             broadcastToOrderSubscribers(orderId, {
@@ -385,7 +538,7 @@ async function start() {
         // Start relayer service
         await relayerService.start();
         // Start HTTP server
-        const PORT = process.env.PORT || 8085;
+        const PORT = config_1.config.port;
         server.listen(PORT, () => {
             logger.info(`Relayer server listening on port ${PORT}`);
             logger.info(`WebSocket endpoint: ws://localhost:${PORT}/ws`);

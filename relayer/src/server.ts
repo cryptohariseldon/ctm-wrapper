@@ -198,7 +198,7 @@ app.post('/api/v1/orders', async (req, res) => {
     }
 
     res.status(500).json({
-      error: error.message || 'Internal server error'
+      error: error instanceof Error ? error.message : 'Internal server error'
     });
   }
 });
@@ -258,7 +258,8 @@ app.delete('/api/v1/orders/:orderId', async (req, res) => {
   } catch (error) {
     logger.error('Order cancellation failed', error);
     res.status(500).json({
-      error: 'Failed to cancel order'
+      error: 'Failed to cancel order',
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 });
@@ -382,7 +383,7 @@ app.get('/api/v1/pools/:poolId/price', async (req, res) => {
     logger.error('Failed to get pool price', error);
     res.status(500).json({
       error: 'Failed to fetch pool price',
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 });
@@ -474,16 +475,16 @@ app.post('/api/v1/airdrop', async (req, res) => {
   } catch (error) {
     logger.error('Airdrop failed', error);
     
-    if (error.name === 'ZodError') {
+    if (error instanceof Error && error.name === 'ZodError') {
       return res.status(400).json({
         error: 'Invalid request',
-        details: error.errors
+        details: (error as any).errors
       });
     }
 
     res.status(500).json({
       error: 'Airdrop failed',
-      message: error.message
+      message: error instanceof Error ? error.message : String(error)
     });
   }
 });

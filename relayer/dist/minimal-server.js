@@ -36,25 +36,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var express_1 = __importDefault(require("express"));
-var cors_1 = __importDefault(require("cors"));
-var http_1 = require("http");
-var ws_1 = require("ws");
-var web3_js_1 = require("@solana/web3.js");
-var fs = __importStar(require("fs"));
-var dotenv = __importStar(require("dotenv"));
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const http_1 = require("http");
+const ws_1 = require("ws");
+const web3_js_1 = require("@solana/web3.js");
+const fs = __importStar(require("fs"));
+const dotenv = __importStar(require("dotenv"));
 dotenv.config();
-var app = (0, express_1.default)();
-var server = (0, http_1.createServer)(app);
-var wss = new ws_1.WebSocketServer({ server: server });
+const app = (0, express_1.default)();
+const server = (0, http_1.createServer)(app);
+const wss = new ws_1.WebSocketServer({ server });
 // Middleware
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 // Load or generate relayer keypair
-var relayerKeypair;
-var keypairPath = process.env.RELAYER_KEYPAIR_PATH || './relayer-keypair.json';
+let relayerKeypair;
+const keypairPath = process.env.RELAYER_KEYPAIR_PATH || './relayer-keypair.json';
 try {
-    var keypairData = JSON.parse(fs.readFileSync(keypairPath, 'utf-8'));
+    const keypairData = JSON.parse(fs.readFileSync(keypairPath, 'utf-8'));
     relayerKeypair = web3_js_1.Keypair.fromSecretKey(new Uint8Array(keypairData));
     console.log('Loaded relayer keypair:', relayerKeypair.publicKey.toBase58());
 }
@@ -64,7 +64,7 @@ catch (error) {
     console.log('Generated new relayer keypair:', relayerKeypair.publicKey.toBase58());
 }
 // Routes
-app.get('/health', function (req, res) {
+app.get('/health', (req, res) => {
     res.json({
         status: 'healthy',
         relayer: relayerKeypair.publicKey.toBase58(),
@@ -72,7 +72,7 @@ app.get('/health', function (req, res) {
         version: '1.0.0'
     });
 });
-app.get('/api/v1/info', function (req, res) {
+app.get('/api/v1/info', (req, res) => {
     res.json({
         relayerAddress: relayerKeypair.publicKey.toBase58(),
         continuumProgram: process.env.CONTINUUM_PROGRAM_ID || 'A548C9LR926hnAWvYDjsXJddidhfzLf3bRb8dmYPgRKn',
@@ -88,29 +88,29 @@ app.get('/api/v1/info', function (req, res) {
         }
     });
 });
-app.post('/api/v1/orders', function (req, res) {
-    var _a = req.body, transaction = _a.transaction, poolId = _a.poolId, amountIn = _a.amountIn, minAmountOut = _a.minAmountOut, isBaseInput = _a.isBaseInput, userPublicKey = _a.userPublicKey;
+app.post('/api/v1/orders', (req, res) => {
+    const { transaction, poolId, amountIn, minAmountOut, isBaseInput, userPublicKey } = req.body;
     console.log('Received order submission:', {
-        poolId: poolId,
-        amountIn: amountIn,
-        minAmountOut: minAmountOut,
-        userPublicKey: userPublicKey
+        poolId,
+        amountIn,
+        minAmountOut,
+        userPublicKey
     });
     // Mock response
     res.json({
         success: true,
-        orderId: "ord_".concat(Date.now()),
+        orderId: `ord_${Date.now()}`,
         orderPda: web3_js_1.Keypair.generate().publicKey.toBase58(),
         sequence: '1',
         estimatedExecutionTime: 5000,
         fee: '100000'
     });
 });
-app.get('/api/v1/orders/:orderId', function (req, res) {
-    var orderId = req.params.orderId;
+app.get('/api/v1/orders/:orderId', (req, res) => {
+    const { orderId } = req.params;
     // Mock response
     res.json({
-        orderId: orderId,
+        orderId,
         status: 'pending',
         sequence: '1',
         poolId: 'mock_pool',
@@ -119,12 +119,12 @@ app.get('/api/v1/orders/:orderId', function (req, res) {
         createdAt: new Date().toISOString()
     });
 });
-app.get('/api/v1/pools', function (req, res) {
+app.get('/api/v1/pools', (req, res) => {
     res.json({
         pools: []
     });
 });
-app.get('/api/v1/stats', function (req, res) {
+app.get('/api/v1/stats', (req, res) => {
     res.json({
         totalOrders: 0,
         successfulOrders: 0,
@@ -136,20 +136,20 @@ app.get('/api/v1/stats', function (req, res) {
     });
 });
 // WebSocket handling
-wss.on('connection', function (ws, req) {
+wss.on('connection', (ws, req) => {
     console.log('WebSocket connection established');
-    ws.on('message', function (message) {
+    ws.on('message', (message) => {
         console.log('WebSocket message:', message.toString());
     });
-    ws.on('close', function () {
+    ws.on('close', () => {
         console.log('WebSocket connection closed');
     });
 });
 // Start server
-var PORT = process.env.PORT || 8085;
-server.listen(PORT, function () {
-    console.log("\uD83D\uDE80 Relayer server running on port ".concat(PORT));
-    console.log("\uD83D\uDCE1 HTTP: http://localhost:".concat(PORT));
-    console.log("\uD83D\uDD0C WebSocket: ws://localhost:".concat(PORT));
-    console.log("\uD83D\uDC9A Health check: http://localhost:".concat(PORT, "/health"));
+const PORT = process.env.PORT || 8085;
+server.listen(PORT, () => {
+    console.log(`🚀 Relayer server running on port ${PORT}`);
+    console.log(`📡 HTTP: http://localhost:${PORT}`);
+    console.log(`🔌 WebSocket: ws://localhost:${PORT}`);
+    console.log(`💚 Health check: http://localhost:${PORT}/health`);
 });

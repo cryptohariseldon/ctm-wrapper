@@ -4,6 +4,8 @@ exports.RelayerService = void 0;
 const web3_js_1 = require("@solana/web3.js");
 const anchor_1 = require("@coral-xyz/anchor");
 const events_1 = require("events");
+const cp_swap_sdk_1 = require("@continuum/cp-swap-sdk");
+const config_1 = require("./config");
 class RelayerService extends events_1.EventEmitter {
     constructor(connection, relayerWallet, continuumProgramId, cpSwapProgramId, logger) {
         super();
@@ -146,18 +148,94 @@ class RelayerService extends events_1.EventEmitter {
             return;
         const startTime = Date.now();
         try {
-            // Mock execution - in real implementation, this would:
-            // 1. Add relayer signature to transaction
-            // 2. Submit to blockchain
-            // 3. Monitor for confirmation
-            // Simulate execution delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            // Mock success
-            const signature = 'mock_' + Math.random().toString(36).substr(2, 9);
+            this.logger.info('Executing order', { orderId, sequence: order.sequence });
+            // If using mock mode, keep the old behavior
+            if (config_1.config.enableMockMode) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                const signature = 'mock_' + Math.random().toString(36).substr(2, 9);
+                order.status = 'executed';
+                order.signature = signature;
+                order.actualAmountOut = (parseInt(order.amountIn) * 0.98).toString();
+                order.executionPrice = 0.98;
+                order.executedAt = new Date().toISOString();
+                const executionTime = Date.now() - startTime;
+                this.stats.successfulOrders++;
+                this.stats.totalExecutionTime += executionTime;
+                this.logger.info('Order executed (mock)', {
+                    orderId,
+                    signature,
+                    executionTime,
+                });
+                this.emit('orderExecuted', orderId, {
+                    signature,
+                    executionPrice: order.executionPrice,
+                    actualAmountOut: order.actualAmountOut,
+                });
+                return;
+            }
+            // Real blockchain execution
+            // Build execute order instruction
+            const executeParams = {
+                poolId: new web3_js_1.PublicKey(order.poolId),
+                fifoSequence: new anchor_1.BN(order.sequence),
+                executor: this.relayerWallet.publicKey,
+            };
+            const executeIx = (0, cp_swap_sdk_1.createExecuteOrderInstruction)(executeParams);
+            const transaction = new web3_js_1.Transaction().add(executeIx);
+            // Add priority fee if configured
+            if (config_1.config.priorityFeeLevel !== 'none') {
+                const priorityFeeMap = {
+                    low: 10000,
+                    medium: 50000,
+                    high: 100000
+                };
+                const microLamports = priorityFeeMap[config_1.config.priorityFeeLevel];
+                transaction.add(web3_js_1.ComputeBudgetProgram.setComputeUnitPrice({
+                    microLamports
+                }));
+            }
+            // Send and confirm transaction
+            const signature = await this.connection.sendTransaction(transaction, [this.relayerWallet], {
+                skipPreflight: false,
+                preflightCommitment: 'confirmed'
+            });
+            // Wait for confirmation
+            const latestBlockhash = await this.connection.getLatestBlockhash();
+            const confirmationResult = await this.connection.confirmTransaction({
+                signature,
+                blockhash: latestBlockhash.blockhash,
+                lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+            }, 'confirmed');
+            if (confirmationResult.value.err) {
+                throw new Error(`Transaction failed: ${JSON.stringify(confirmationResult.value.err)}`);
+            }
+            // Parse transaction result to get actual output amount
+            // In a real implementation, we would parse the transaction logs or account data
+            // For now, we'll estimate based on pool state
+            const poolConfig = config_1.config.supportedPools.find(p => p.poolId === order.poolId);
+            if (poolConfig) {
+                const [tokenAVault, tokenBVault] = await Promise.all([
+                    this.connection.getTokenAccountBalance(new web3_js_1.PublicKey(poolConfig.tokenAVault)),
+                    this.connection.getTokenAccountBalance(new web3_js_1.PublicKey(poolConfig.tokenBVault))
+                ]);
+                const tokenABalance = Number(tokenAVault.value.amount);
+                const tokenBBalance = Number(tokenBVault.value.amount);
+                // Simple constant product calculation
+                const amountIn = parseInt(order.amountIn);
+                const k = tokenABalance * tokenBBalance;
+                const newTokenABalance = tokenABalance + amountIn;
+                const newTokenBBalance = k / newTokenABalance;
+                const amountOut = tokenBBalance - newTokenBBalance;
+                order.actualAmountOut = Math.floor(amountOut * 0.9975).toString(); // Apply 0.25% fee
+                order.executionPrice = amountOut / amountIn;
+            }
+            else {
+                // Fallback estimation
+                order.actualAmountOut = (parseInt(order.amountIn) * 0.98).toString();
+                order.executionPrice = 0.98;
+            }
             order.status = 'executed';
             order.signature = signature;
-            order.actualAmountOut = (parseInt(order.amountIn) * 0.98).toString();
-            order.executionPrice = 0.98;
             order.executedAt = new Date().toISOString();
             const executionTime = Date.now() - startTime;
             this.stats.successfulOrders++;
@@ -166,6 +244,7 @@ class RelayerService extends events_1.EventEmitter {
                 orderId,
                 signature,
                 executionTime,
+                actualAmountOut: order.actualAmountOut
             });
             this.emit('orderExecuted', orderId, {
                 signature,
@@ -175,11 +254,11 @@ class RelayerService extends events_1.EventEmitter {
         }
         catch (error) {
             order.status = 'failed';
-            order.error = error.message;
+            order.error = error instanceof Error ? error.message : String(error);
             this.stats.failedOrders++;
             this.logger.error('Order execution failed', {
                 orderId,
-                error: error.message,
+                error: error instanceof Error ? error.message : String(error),
             });
             this.emit('orderFailed', orderId, error);
         }

@@ -2,7 +2,7 @@ import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction, Comm
 import { BN } from '@coral-xyz/anchor';
 import { EventEmitter } from 'events';
 import winston from 'winston';
-import { ContinuumClient } from '@continuum/cp-swap-sdk';
+import { createExecuteOrderInstruction } from '@continuum/cp-swap-sdk';
 import { config as relayerConfig } from './config';
 
 interface OrderSubmission {
@@ -221,8 +221,9 @@ export class RelayerService extends EventEmitter {
     try {
       this.logger.info('Executing order', { orderId, sequence: order.sequence });
       
-      // If using mock mode, keep the old behavior
-      if (relayerConfig.enableMockMode) {
+      // For now, always use mock mode until we update the execute order logic
+      // TODO: Implement real blockchain execution
+      if (true || relayerConfig.enableMockMode) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         const signature = 'mock_' + Math.random().toString(36).substr(2, 9);
@@ -252,21 +253,15 @@ export class RelayerService extends EventEmitter {
       }
       
       // Real blockchain execution
-      const client = new ContinuumClient(
-        this.connection,
-        this.relayerWallet,
-        this.continuumProgramId
-      );
-      
       // Build execute order instruction
-      const { transaction } = await client.buildExecuteOrderTransaction(
-        new PublicKey(order.poolId),
-        new BN(order.sequence),
-        {
-          computeUnitLimit: relayerConfig.computeUnitLimit,
-          priorityFeeLevel: relayerConfig.priorityFeeLevel
-        }
-      );
+      const executeParams = {
+        poolId: new PublicKey(order.poolId),
+        fifoSequence: new BN(order.sequence),
+        executor: this.relayerWallet.publicKey,
+      };
+      
+      const executeIx = createExecuteOrderInstruction(executeParams);
+      const transaction = new Transaction().add(executeIx);
       
       // Add priority fee if configured
       if (relayerConfig.priorityFeeLevel !== 'none') {

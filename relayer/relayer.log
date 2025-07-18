@@ -13,3 +13,36 @@
 {"level":"info","message":"Order submitted","orderId":"ord_1752832095891_zldbfk17j","poolId":"BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2","sequence":"1","timestamp":"2025-07-18T09:48:15.894Z"}
 {"level":"info","message":"WebSocket connection established","path":"/ws/orders/ord_1752832095891_zldbfk17j","timestamp":"2025-07-18T09:48:15.898Z"}
 {"executionTime":2002,"level":"info","message":"Order executed","orderId":"ord_1752832095891_zldbfk17j","signature":"mock_6dz9u8z45","timestamp":"2025-07-18T09:48:18.537Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T14:17:20.914Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T14:17:20.918Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T14:20:11.036Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T14:20:11.039Z"}
+{"level":"info","message":"Relayer balance: 0 SOL","timestamp":"2025-07-18T14:20:11.086Z"}
+{"level":"warn","message":"Low relayer balance! Please fund the relayer wallet.","timestamp":"2025-07-18T14:20:11.087Z"}
+{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T14:20:11.087Z"}
+{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T14:20:11.088Z"}
+{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T14:20:11.089Z"}
+{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T14:20:11.089Z"}
+{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T14:20:20.576Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T14:20:36.611Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T14:20:36.614Z"}
+{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T14:20:36.661Z"}
+{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T14:20:36.662Z"}
+{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T14:20:36.663Z"}
+{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T14:20:36.664Z"}
+{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T14:20:36.664Z"}
+{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T14:21:11.786Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T14:21:14.807Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T14:21:14.810Z"}
+{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T14:21:14.862Z"}
+{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T14:21:14.862Z"}
+{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T14:21:14.864Z"}
+{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T14:21:14.864Z"}
+{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T14:21:14.864Z"}
+{"amount":1,"ip":"::ffff:49.37.117.251","level":"info","message":"Processing airdrop request","recipient":"CRbNEfDGMKHiWcibuJCbxP6KKvdGEDm2EZE46cBX4kHa","timestamp":"2025-07-18T14:47:25.302Z"}
+{"amount":1,"level":"info","message":"Airdrop successful","recipient":"CRbNEfDGMKHiWcibuJCbxP6KKvdGEDm2EZE46cBX4kHa","signature":"3bPFShtxwDwJ1c7vGepyUD314a5aJrXEexqPM8dGKhziSR615Dfbt8qXr7fDpJFK1Rf4Eg2z7mBPKWx9vFXihBJx","timestamp":"2025-07-18T14:47:25.563Z"}
+{"amountIn":"1000000000","level":"info","message":"Received order submission","poolId":"BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2","timestamp":"2025-07-18T14:48:50.008Z","user":"CRbNEfDGMKHiWcibuJCbxP6KKvdGEDm2EZE46cBX4kHa"}
+{"level":"info","message":"Order submitted","orderId":"ord_1752850130009_i0nuaissk","poolId":"BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2","sequence":"1","timestamp":"2025-07-18T14:48:50.010Z"}
+{"level":"info","message":"Executing order","orderId":"ord_1752850130009_i0nuaissk","sequence":"1","timestamp":"2025-07-18T14:48:50.411Z"}
+{"level":"info","message":"WebSocket connection established","path":"/ws/orders/ord_1752850130009_i0nuaissk","timestamp":"2025-07-18T14:48:50.524Z"}
+{"executionTime":2003,"level":"info","message":"Order executed (mock)","orderId":"ord_1752850130009_i0nuaissk","signature":"mock_vfwdd1yif","timestamp":"2025-07-18T14:48:52.414Z"}

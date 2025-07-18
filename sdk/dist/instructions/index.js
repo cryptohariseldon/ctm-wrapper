@@ -19,3 +19,4 @@ __exportStar(require("./initializeCpSwapPool"), exports);
 __exportStar(require("./submitOrder"), exports);
 __exportStar(require("./executeOrder"), exports);
 __exportStar(require("./cancelOrder"), exports);
+__exportStar(require("./swapImmediate"), exports);
