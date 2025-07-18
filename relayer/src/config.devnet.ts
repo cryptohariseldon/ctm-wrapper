@@ -94,7 +94,7 @@ export const config = {
   
   // Airdrop settings (devnet only)
   airdropAmountSol: 2,
-  airdropRateLimitMs: 60000, // 1 minute between airdrops
+  airdropRateLimitMs: 5000, // 5 seconds between airdrops
   
   // Logging
   logLevel: process.env.LOG_LEVEL || 'info',

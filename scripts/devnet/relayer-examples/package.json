@@ -1,0 +1,22 @@
+{
+  "name": "relayer-devnet-examples",
+  "version": "1.0.0",
+  "description": "Example scripts for interacting with Continuum CP-Swap relayer on devnet",
+  "scripts": {
+    "airdrop": "ts-node request-airdrop.ts",
+    "pool-info": "ts-node get-pool-info.ts",
+    "swap": "ts-node submit-swap.ts",
+    "monitor": "ts-node monitor-order.ts"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.78.0",
+    "@solana/spl-token": "^0.3.0",
+    "@coral-xyz/anchor": "^0.28.0",
+    "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.5",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  }
+}

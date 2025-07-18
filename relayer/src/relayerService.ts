@@ -1,12 +1,13 @@
-import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction, Commitment, ComputeBudgetProgram } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction, Commitment, ComputeBudgetProgram, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 import { EventEmitter } from 'events';
 import winston from 'winston';
 import { createExecuteOrderInstruction } from '@continuum/cp-swap-sdk';
 import { config as relayerConfig } from './config';
+import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 interface OrderSubmission {
-  transaction: Transaction | VersionedTransaction;
+  transaction?: Transaction | VersionedTransaction;
   poolId: PublicKey;
   amountIn: string;
   minAmountOut: string;
@@ -92,7 +93,9 @@ export class RelayerService extends EventEmitter {
       poolId: params.poolId.toBase58(),
       userPublicKey: params.userPublicKey.toBase58(),
       amountIn: params.amountIn,
-    };
+      minAmountOut: params.minAmountOut,
+      isBaseInput: params.isBaseInput,
+    } as any;
     
     this.orders.set(orderId, orderStatus);
     this.executionQueue.push(orderId);
@@ -154,22 +157,17 @@ export class RelayerService extends EventEmitter {
   }
 
   getSupportedPools(): string[] {
-    // Mock pool list
-    return [
-      'BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2',
-      'HaDuGHuAQEocjTvN4nTM3c1uHGv3KSTasen58aizEhVW',
-    ];
+    return relayerConfig.supportedPools.map(pool => pool.poolId);
   }
 
   async getSupportedPoolsWithInfo(): Promise<PoolInfo[]> {
-    // Mock pool info
-    return this.getSupportedPools().map(poolId => ({
-      poolId,
-      token0: 'So11111111111111111111111111111111111111112',
-      token1: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-      fee: 0.003,
-      liquidity: '1000000000000',
-      volume24h: '50000000000',
+    return relayerConfig.supportedPools.map(pool => ({
+      poolId: pool.poolId,
+      token0: pool.tokenAMint,
+      token1: pool.tokenBMint,
+      fee: 0.0025, // 0.25% fee
+      liquidity: '1000000000000', // Placeholder
+      volume24h: '0', // Placeholder
       isActive: true,
     }));
   }
@@ -221,9 +219,8 @@ export class RelayerService extends EventEmitter {
     try {
       this.logger.info('Executing order', { orderId, sequence: order.sequence });
       
-      // For now, always use mock mode until we update the execute order logic
-      // TODO: Implement real blockchain execution
-      if (true || relayerConfig.enableMockMode) {
+      // Use mock mode for localnet or if explicitly enabled
+      if (relayerConfig.enableMockMode && !relayerConfig.isDevnet) {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         const signature = 'mock_' + Math.random().toString(36).substr(2, 9);
@@ -252,16 +249,34 @@ export class RelayerService extends EventEmitter {
         return;
       }
       
-      // Real blockchain execution
-      // Build execute order instruction
-      const executeParams = {
-        poolId: new PublicKey(order.poolId),
-        fifoSequence: new BN(order.sequence),
-        executor: this.relayerWallet.publicKey,
-      };
+      // Real blockchain execution - build swap_immediate instruction
+      const poolId = new PublicKey(order.poolId);
+      const user = new PublicKey(order.userPublicKey);
       
-      const executeIx = createExecuteOrderInstruction(executeParams);
-      const transaction = new Transaction().add(executeIx);
+      // Find pool config
+      const poolConfig = relayerConfig.supportedPools.find(p => p.poolId === order.poolId);
+      if (!poolConfig) {
+        throw new Error('Pool configuration not found');
+      }
+      
+      // Parse amounts
+      const amountIn = new BN(order.amountIn);
+      const minAmountOut = new BN(order.minAmountOut || '0');
+      
+      // Determine if it's base input (USDC is base in our setup)
+      const isBaseInput = poolConfig.tokenASymbol === 'USDC';
+      
+      // Build swap_immediate instruction
+      const swapIx = await this.buildSwapImmediateInstruction(
+        poolId,
+        user,
+        amountIn,
+        minAmountOut,
+        isBaseInput,
+        poolConfig
+      );
+      
+      const transaction = new Transaction().add(swapIx);
       
       // Add priority fee if configured
       if (relayerConfig.priorityFeeLevel !== 'none') {
@@ -300,7 +315,6 @@ export class RelayerService extends EventEmitter {
       // Parse transaction result to get actual output amount
       // In a real implementation, we would parse the transaction logs or account data
       // For now, we'll estimate based on pool state
-      const poolConfig = relayerConfig.supportedPools.find(p => p.poolId === order.poolId);
       if (poolConfig) {
         const [tokenAVault, tokenBVault] = await Promise.all([
           this.connection.getTokenAccountBalance(new PublicKey(poolConfig.tokenAVault)),
@@ -358,5 +372,76 @@ export class RelayerService extends EventEmitter {
       
       this.emit('orderFailed', orderId, error);
     }
+  }
+
+  private async buildSwapImmediateInstruction(
+    poolId: PublicKey,
+    user: PublicKey,
+    amountIn: BN,
+    minAmountOut: BN,
+    isBaseInput: boolean,
+    poolConfig: any
+  ): Promise<TransactionInstruction> {
+    // Derive PDAs
+    const [fifoState] = PublicKey.findProgramAddressSync(
+      [Buffer.from('fifo_state')],
+      this.continuumProgramId
+    );
+
+    const [poolAuthority, poolAuthorityBump] = PublicKey.findProgramAddressSync(
+      [Buffer.from('cp_pool_authority'), poolId.toBuffer()],
+      this.continuumProgramId
+    );
+
+    const [cpSwapAuthority] = PublicKey.findProgramAddressSync(
+      [Buffer.from('vault_and_lp_mint_auth_seed')],
+      this.cpSwapProgramId
+    );
+
+    // Get user token accounts
+    const tokenAMint = new PublicKey(poolConfig.tokenAMint);
+    const tokenBMint = new PublicKey(poolConfig.tokenBMint);
+    const userTokenA = getAssociatedTokenAddressSync(tokenAMint, user);
+    const userTokenB = getAssociatedTokenAddressSync(tokenBMint, user);
+
+    // Determine source and destination based on swap direction
+    const userSourceToken = isBaseInput ? userTokenA : userTokenB;
+    const userDestToken = isBaseInput ? userTokenB : userTokenA;
+
+    // Build instruction data
+    const discriminator = Buffer.from([175, 131, 44, 121, 171, 170, 38, 18]);
+    const data = Buffer.concat([
+      discriminator,
+      amountIn.toArrayLike(Buffer, 'le', 8),
+      minAmountOut.toArrayLike(Buffer, 'le', 8),
+      Buffer.from([isBaseInput ? 1 : 0]),
+      poolId.toBuffer(),
+      Buffer.from([poolAuthorityBump]),
+    ]);
+
+    return new TransactionInstruction({
+      keys: [
+        // Required accounts for Continuum
+        { pubkey: fifoState, isSigner: false, isWritable: true },
+        { pubkey: this.cpSwapProgramId, isSigner: false, isWritable: false },
+        
+        // Remaining accounts for CP-Swap CPI - user must be first
+        { pubkey: user, isSigner: true, isWritable: false },
+        { pubkey: cpSwapAuthority, isSigner: false, isWritable: false },
+        { pubkey: new PublicKey(poolConfig.ammConfig), isSigner: false, isWritable: false },
+        { pubkey: poolId, isSigner: false, isWritable: true },
+        { pubkey: userSourceToken, isSigner: false, isWritable: true },
+        { pubkey: userDestToken, isSigner: false, isWritable: true },
+        { pubkey: new PublicKey(poolConfig.tokenAVault), isSigner: false, isWritable: true },
+        { pubkey: new PublicKey(poolConfig.tokenBVault), isSigner: false, isWritable: true },
+        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+        { pubkey: tokenAMint, isSigner: false, isWritable: false },
+        { pubkey: tokenBMint, isSigner: false, isWritable: false },
+        { pubkey: new PublicKey(poolConfig.observationState), isSigner: false, isWritable: true },
+      ],
+      programId: this.continuumProgramId,
+      data,
+    });
   }
 }

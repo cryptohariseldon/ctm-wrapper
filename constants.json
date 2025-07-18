@@ -1,0 +1,75 @@
+{
+  "devnet": {
+    "programs": {
+      "continuum": "EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq",
+      "cpSwap": "GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp"
+    },
+    "tokens": {
+      "USDC": {
+        "mint": "8eLeJssGBw8Z2z1y3uz1xCwzrWa2QjCqAtH7Y88MjTND",
+        "decimals": 6,
+        "symbol": "USDC",
+        "name": "USD Coin (Devnet)"
+      },
+      "WSOL": {
+        "mint": "99dB8f37b5n9rnU8Yc7D4Ey5XubJuCDDSacYwE4GPEtV",
+        "decimals": 9,
+        "symbol": "WSOL",
+        "name": "Wrapped SOL (Devnet)"
+      }
+    },
+    "pools": {
+      "USDC-WSOL": {
+        "poolId": "9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT",
+        "ammConfig": "5XoBUe5w3xSjRMgaPSwyA2ujH7eBBH5nD5L9H2ws841B",
+        "ammConfigIndex": 0,
+        "tokenAMint": "8eLeJssGBw8Z2z1y3uz1xCwzrWa2QjCqAtH7Y88MjTND",
+        "tokenBMint": "99dB8f37b5n9rnU8Yc7D4Ey5XubJuCDDSacYwE4GPEtV",
+        "tokenAVault": "CfD5a6Wj9puCEL2QwSTS263KQjaCskVBoUc8iywbL2Rr",
+        "tokenBVault": "5FeimpxVzYTuGvJmKDo9ebJcSgfQpQ1fXDLb4tC3ig5p",
+        "lpMint": "CMAURuRoyduAZ8axAHZM3qAgVCtmRs5fmBY4HuafTbMv",
+        "observationState": "7GZfqjfsHzWu68DMtgCbpjN18a1e3hrZ1kqS2zWhJVHP",
+        "cpPoolAuthority": "2uMMFzLKazhwXds98J79eA8gym7j666wXZPqc6kicUxP",
+        "authorityType": 1,
+        "feeRate": 2500,
+        "createdAt": "2025-07-18T14:47:27.141Z"
+      }
+    },
+    "pdas": {
+      "fifoState": "4d5Q2GpLkyZbQoSCWFHGRHVtHNNJqV6g3qSXdLSLRSBh",
+      "cpSwapVaultAuthority": "FNCLgPkWVhLZMegQhxN1NQBpb6e6xX9EmDRsMFZbpJqQ"
+    },
+    "rpc": {
+      "endpoint": "https://api.devnet.solana.com",
+      "wsEndpoint": "wss://api.devnet.solana.com"
+    },
+    "airdrop": {
+      "enabled": true,
+      "amounts": {
+        "SOL": 0.1,
+        "USDC": 1000,
+        "WSOL": 10
+      }
+    }
+  },
+  "localnet": {
+    "programs": {
+      "continuum": "EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq",
+      "cpSwap": "GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp"
+    },
+    "rpc": {
+      "endpoint": "http://localhost:8899",
+      "wsEndpoint": "ws://localhost:8900"
+    }
+  },
+  "mainnet": {
+    "programs": {
+      "continuum": "TBD",
+      "cpSwap": "TBD"
+    },
+    "rpc": {
+      "endpoint": "https://api.mainnet-beta.solana.com",
+      "wsEndpoint": "wss://api.mainnet-beta.solana.com"
+    }
+  }
+}
