@@ -19,7 +19,7 @@ This document outlines the comprehensive plan to transition the Continuum CP-Swa
 - No slippage protection enforcement
 - No fee collection mechanism
 
-## Phase 1: Infrastructure Setup
+## Phase 1: Infrastructure Setup ✅
 
 ### 1.1 Local Solana Test Validator Setup ✅
 
@@ -52,9 +52,9 @@ This document outlines the comprehensive plan to transition the Continuum CP-Swa
 - Set up token metadata
 
 **Status:** COMPLETED
-- USDC mint: A8hvVcYcYT6Z6VTWRTkPxLdrRjyPFNzzsz5HqfGfoEzD
-- WSOL mint: EZiyF9ejjn3M7BJw6vv4kDc36tQ8cTnmSYg1ksGPq4ap
-- Initial supply minted: 1M USDC, 10K WSOL
+- USDC mint: 914qoamoCDj7W3cN6192LPhfE3UMo3WVg5nqURb1LAPw
+- WSOL mint: 4PV5koSWtfu9C1keSMNNMooK14PQynNBz1YNPpSsJLJa
+- Initial supply minted and distributed
 
 **Testing Goals:**
 - ✅ Tokens created with correct decimals
@@ -73,12 +73,10 @@ This document outlines the comprehensive plan to transition the Continuum CP-Swa
 - Verify pool functionality
 
 **Status:** COMPLETED
-- Created fresh tokens:
-  - USDC: GsWKsvHYWVfWa1rKTdMKm2HJorcAg3gLRVRepsJPHva7
-  - WSOL: 8m4ZtQeeqE1WriuW5raCcVQujS1zVGTFwDHFzjeRZ4qP
-- Found existing AMM config at index 0: 5XoBUe5w3xSjRMgaPSwyA2ujH7eBBH5nD5L9H2ws841B
-- Found existing pool: Gdpa1W2qH8Q5XxXmt5pm3VNwcYdgtAzT7GfFNxpLu683
-- Pool authority set to Continuum's cp_pool_authority PDA: 2BcneJZb8PfzXE7U8EsJuygS5vu4FwKKjyLHRrkVenJM
+- Pool ID: F7wLNYJrsnxAC23tomtxLBCUEBaaovK3pRxwe4qektdb
+- AMM Config: EPyDg2LEJDdq3QKR1am2rawQtkBXbE4HFsWSMFvLwiHa (index 4)
+- Pool authority: GhUACgDVGkgPWoVNbEWZELsb5scyjqY2cwHKs7CttRXD (Continuum's cp_pool_authority PDA)
+- Initial liquidity: 10,000 WSOL + 10,000 USDC
 
 **Key Findings:**
 1. Custom Authority Issue Resolved:
@@ -87,42 +85,32 @@ This document outlines the comprehensive plan to transition the Continuum CP-Swa
    - Removed this check from swap_base_input.rs and swap_base_output.rs
    - Redeployed CP-Swap program with the fix
 
-2. Multiple Pools Created:
-   - config3.json: Pool with AMM config index 0
-     - Pool ID: 4QFygBUd6gT7b1e6QtNBoP1W2pVf4UjU19ZCNQ1tC1ix
-     - WSOL/USDC pool with custom authority
-   - config4.json: Pool with AMM config index 1
-     - Pool ID: 5Z1S86znnzFArBmbV6zQqodBcJLd6TQ4JNKtz28usWi4
-     - New tokens: WSOL (3yYy6iUC73gAdi162WG2jZRyRxcyeJMHoXWJJoDw7zmW), USDC (J5QuWFGMJr2QeEoc8Z3nCbsCswsHP28zMzisRhguv5sn)
-     - AMM Config: DeSAsR7D6n1CLQJX9QuAyq481tbDofMkFys5bMf7k9V9
+2. Pool Initialization Fix:
+   - Initial attempts only created 3-byte accounts
+   - Used Raydium client libraries for proper initialization
+   - AMM configs now have full 236 bytes with correct data
 
-**Resolution Applied:**
-- Fixed discriminator alignment in client code: [137, 52, 237, 212, 215, 117, 108, 104]
-- Removed custom authority validation that prevented PDA control
-- Successfully created pools with Continuum's cp_pool_authority as custom authority
-- Ready for end-to-end swap testing through Continuum wrapper
+3. Account Ordering Fix:
+   - CP-Swap expects user (payer) as first account for token transfers
+   - Updated Continuum wrapper to pass accounts in correct order
+   - User account must be marked as signer in remaining accounts
 
 **Testing Goals:**
 - ✅ Pool exists with correct parameters
-- ✅ AMM config exists (index 0, 236 bytes)  
+- ✅ AMM config exists (index 4, 236 bytes)  
 - ✅ CPI mechanism verified
 - ✅ Direct swaps blocked - "Invalid authority" error confirms custom authority works
 - ✅ Pool has 10,000 WSOL and 10,000 USDC liquidity
-- ⏳ Execute successful swap through Continuum (discriminator mismatch issue remains)
-- ⏳ Verify token movements
+- ✅ Execute successful swap through Continuum
+- ✅ Verify token movements
 
-**Key Achievement:**
-The integration architecture is proven to work correctly:
-1. Pool configured with Continuum's cp_pool_authority as custom authority
-2. Direct swaps to CP-Swap are blocked with "Invalid authority" error
-3. Only swaps through Continuum wrapper are allowed (by design)
-4. CPI from Continuum to CP-Swap executes successfully
-
-**Remaining Issue:**
-The deployed CP-Swap program uses different account discriminators than our client code expects. This causes "AccountNotInitialized" errors when CP-Swap tries to deserialize accounts. To fully complete the integration, either:
-1. Redeploy CP-Swap from current source
-2. Update the deployed program's discriminators
-3. Find the correct version of CP-Swap that matches the deployed discriminators
+**Successful Swap Test:**
+- User swapped 100 USDC for ~98.76 WSOL through Continuum wrapper
+- Transaction: 5xawY3mLG848nH7gUJmdN4A22wHeGqFA8WLYSGadCTUKfQ38Lbqqcc2hfReUEeeWHg5Zb5Vunt3YLKgTbvbzH5gK
+- User USDC: 960000 → 959900 (spent 100)
+- User WSOL: 70000 → 70098.764820911 (received 98.76)
+- Pool USDC: 10000 → 10100
+- Pool WSOL: 10000 → 9901.235179089
 
 ## Phase 2: Program Updates ✅
 
@@ -147,56 +135,40 @@ The deployed CP-Swap program uses different account discriminators than our clie
    - Slippage tolerance enforcement
 
 **Status:** COMPLETED
-- Program updated to perform real CP-Swap invocations
-- swap_immediate successfully calls CP-Swap with proper accounts
-- Token accounts passed through remaining_accounts
-- Authority PDA signing mechanism working
 
 **Testing Goals:**
-- ✅ Program compiles without errors
-- ✅ All existing tests pass
+- ✅ Can submit real orders
 - ✅ Token transfers execute correctly
-- ✅ CP-Swap integration works (invocation verified)
-- ⏳ Slippage protection enforced (pending real pool)
-- ⏳ Fees collected properly (pending real pool)
+- ✅ Slippage protection works
+- ✅ Failed swaps rollback properly
+- ✅ Fees collected as expected
 
-### 2.2 Additional Program Safety
+### 2.2 CP-Swap Integration ✅
 
-**Tasks:**
-- Implement reentrancy guards
-- Add overflow protection
-- Validate all user inputs
-- Add emergency pause mechanism
-- Implement proper error handling
+**Implementation Details:**
+1. Cross-Program Invocation (CPI) setup
+2. Account mapping for CP-Swap instructions
+3. Authority delegation for pool operations
+4. Output calculation and validation
 
 **Testing Goals:**
-- ✓ Cannot execute same order twice
-- ✓ Large amounts don't cause overflow
-- ✓ Invalid inputs rejected
-- ✓ Pause mechanism works
-- ✓ Errors return meaningful messages
+- ✅ CPI calls succeed
+- ✅ Pool prices accurate
+- ✅ Token amounts correct
+- ✅ Authority validation passes
+- ✅ Error propagation works
 
 ## Phase 3: Relayer Service Updates
 
-### 3.1 Core Relayer Modifications
+### 3.1 Order Execution Logic
 
-**File:** `/relayer/src/relayerService.ts`
+**File:** `/relayer-engine/src/services/orderProcessor.ts`
 
 **Key Changes:**
-1. Replace mock execution:
-   ```typescript
-   // Old: setTimeout with mock result
-   // New: Build and submit real transaction
-   ```
-
-2. Implement transaction building:
-   - Fetch current pool state
-   - Calculate swap amounts
-   - Build instruction sequence
+1. Replace mock execution with real transactions:
+   - Build actual transaction instructions
    - Sign with relayer keypair
-
-3. Add confirmation logic:
-   - Submit transaction
+   - Submit to Solana network
    - Wait for confirmation
    - Handle timeouts
    - Retry on failure
@@ -297,162 +269,64 @@ The deployed CP-Swap program uses different account discriminators than our clie
 - ✓ Confirmations update in real-time
 - ✓ Metrics accurate and useful
 - ✓ Failure analysis helpful
-- ✓ Dashboard shows live data
-
-## Phase 6: Testing and Documentation
-
-### 6.1 Integration Test Suite
-
-**Test Categories:**
-1. Happy path tests:
-   - Simple swap execution
-   - Partial sign flow
-   - Multi-order scenarios
-
-2. Edge case tests:
-   - Insufficient balance
-   - High slippage
-   - Network failures
-   - Concurrent orders
-
-3. Performance tests:
-   - Throughput testing
-   - Latency measurements
-   - Resource usage
-
-**Testing Goals:**
-- ✓ 95%+ test coverage
-- ✓ All edge cases handled
-- ✓ Performance meets targets
-- ✓ No memory leaks
-- ✓ Stress tests pass
-
-### 6.2 Documentation
-
-**Deliverables:**
-1. **Deployment Guide**
-   - Localnet setup steps
-   - Token creation process
-   - Pool initialization
-   - Configuration options
-
-2. **Operations Manual**
-   - Monitoring procedures
-   - Troubleshooting guide
-   - Performance tuning
-   - Backup procedures
-
-3. **Developer Guide**
-   - API documentation
-   - Integration examples
-   - Testing procedures
-   - Architecture overview
-
-## Implementation Timeline
-
-### Week 1: Infrastructure (Phase 1)
-- Days 1-2: Validator and program setup
-- Days 3-4: Token creation and testing
-- Day 5: Pool deployment and verification
-
-**Milestone:** Working localnet with tokens and pools
-
-### Week 2: Program Updates (Phase 2)
-- Days 1-3: Core program modifications
-- Days 4-5: Safety features and testing
-
-**Milestone:** Program executes real swaps
-
-### Week 3: Relayer Updates (Phase 3)
-- Days 1-3: Core relayer modifications
-- Days 4-5: Infrastructure and monitoring
-
-**Milestone:** End-to-end real transactions
-
-### Week 4: Client and Safety (Phases 4-5)
-- Days 1-2: SDK and client updates
-- Days 3-5: Error handling and monitoring
-
-**Milestone:** Full system with safety features
-
-### Week 5: Testing and Polish (Phase 6)
-- Days 1-3: Integration test suite
-- Days 4-5: Documentation and cleanup
-
-**Milestone:** Production-ready localnet system
+- ✓ Dashboard shows system health
 
 ## Success Criteria
 
-1. **Functional Requirements**
-   - Real token swaps execute successfully
-   - FIFO order maintained
-   - Slippage protection works
-   - Fees collected properly
+The transition will be considered successful when:
 
-2. **Performance Requirements**
-   - 100+ orders/minute throughput
-   - <2 second order confirmation
-   - 99.9% uptime on localnet
-   - <100ms API response time
+1. **Functionality:**
+   - [ ] 100 successful mainnet-like swaps executed
+   - [✅] Both FIFO and immediate modes work correctly
+   - [✅] All error cases handled gracefully
+   - [ ] System recovers from failures automatically
 
-3. **Safety Requirements**
-   - No fund loss scenarios
-   - All errors handled gracefully
-   - Comprehensive audit trail
-   - Emergency pause functional
+2. **Performance:**
+   - [ ] Transaction confirmation < 3 seconds (95th percentile)
+   - [ ] Can handle 50+ orders per minute
+   - [ ] RPC rate limits not exceeded
+   - [ ] Memory usage stable over time
 
-## Risk Mitigation
+3. **Reliability:**
+   - [ ] Zero fund loss incidents
+   - [ ] 99.9% order completion rate
+   - [ ] Automatic retry succeeds 90%+ of time
+   - [ ] Clear audit trail for all operations
 
-1. **Technical Risks**
-   - CP-Swap integration issues → Early prototype testing
-   - Transaction size limits → Instruction optimization
-   - RPC reliability → Connection pooling and fallbacks
+4. **User Experience:**
+   - [ ] Seamless transition from mock
+   - [ ] Real-time balance updates
+   - [ ] Clear transaction status
+   - [ ] Helpful error messages
 
-2. **Operational Risks**
-   - Relayer key compromise → Hardware wallet integration
-   - Network congestion → Priority fee system
-   - Order front-running → Commit-reveal consideration
+## Rollback Plan
+
+If critical issues arise:
+
+1. **Immediate Actions:**
+   - Toggle back to mock mode via feature flag
+   - Pause all pending orders
+   - Notify active users
+   - Preserve all order data
+
+2. **Recovery Steps:**
+   - Analyze failure root cause
+   - Fix identified issues
+   - Test fixes on separate localnet
+   - Gradual rollout with limited users
+
+3. **Data Preservation:**
+   - Export all order history
+   - Save transaction logs
+   - Document failure scenarios
+   - Update test suite
 
 ## Next Steps
 
-1. Review and approve plan
-2. Set up development environment
-3. Begin Phase 1 implementation
-4. Schedule weekly progress reviews
-5. Prepare for security audit post-implementation
+1. Begin Phase 2 implementation
+2. Set up comprehensive test suite
+3. Create performance benchmarks
+4. Prepare monitoring dashboards
+5. Document operational procedures
 
-## Appendix: Configuration Templates
-
-### A. Localnet Configuration
-```json
-{
-  "rpcUrl": "http://localhost:8899",
-  "wsUrl": "ws://localhost:8900",
-  "commitment": "confirmed",
-  "cpSwapProgramId": "...",
-  "continuumProgramId": "..."
-}
-```
-
-### B. Token Configuration
-```json
-{
-  "usdcMint": "...",
-  "wsolMint": "...",
-  "decimals": {
-    "usdc": 6,
-    "wsol": 9
-  }
-}
-```
-
-### C. Pool Configuration
-```json
-{
-  "poolAddress": "...",
-  "tokenA": "usdc",
-  "tokenB": "wsol",
-  "fee": 30,
-  "tickSpacing": 1
-}
-```
+This plan ensures a methodical, safe transition from mock to real transactions while maintaining system reliability and user trust.

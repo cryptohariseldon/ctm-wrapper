@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { RelayerService } from './relayerService';
-import { config } from './config.simple';
+import { config } from './config';
 import winston from 'winston';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
