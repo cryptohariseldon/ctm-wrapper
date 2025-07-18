@@ -10,7 +10,11 @@
     "test": "jest",
     "lint": "eslint src/**/*.ts",
     "docker:build": "docker build -t continuum-relayer .",
-    "docker:run": "docker run -p 8080:8080 --env-file .env continuum-relayer"
+    "docker:run": "docker run -p 8080:8080 --env-file .env continuum-relayer",
+    "example:airdrop": "ts-node examples/airdrop.ts",
+    "example:price": "ts-node examples/check-price.ts",
+    "example:submit": "ts-node examples/submit-order.ts",
+    "example:swap": "ts-node examples/swap-immediate.ts"
   },
   "dependencies": {
     "@continuum/cp-swap-sdk": "file:../sdk",

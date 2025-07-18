@@ -1,7 +1,9 @@
-import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction, Commitment } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction, Commitment, ComputeBudgetProgram } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 import { EventEmitter } from 'events';
 import winston from 'winston';
+import { ContinuumClient } from '@continuum/cp-swap-sdk';
+import { config as relayerConfig } from './config';
 
 interface OrderSubmission {
   transaction: Transaction | VersionedTransaction;
@@ -217,20 +219,119 @@ export class RelayerService extends EventEmitter {
     const startTime = Date.now();
     
     try {
-      // Mock execution - in real implementation, this would:
-      // 1. Add relayer signature to transaction
-      // 2. Submit to blockchain
-      // 3. Monitor for confirmation
+      this.logger.info('Executing order', { orderId, sequence: order.sequence });
       
-      // Simulate execution delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // If using mock mode, keep the old behavior
+      if (relayerConfig.enableMockMode) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const signature = 'mock_' + Math.random().toString(36).substr(2, 9);
+        order.status = 'executed';
+        order.signature = signature;
+        order.actualAmountOut = (parseInt(order.amountIn) * 0.98).toString();
+        order.executionPrice = 0.98;
+        order.executedAt = new Date().toISOString();
+        
+        const executionTime = Date.now() - startTime;
+        this.stats.successfulOrders++;
+        this.stats.totalExecutionTime += executionTime;
+        
+        this.logger.info('Order executed (mock)', {
+          orderId,
+          signature,
+          executionTime,
+        });
+        
+        this.emit('orderExecuted', orderId, {
+          signature,
+          executionPrice: order.executionPrice,
+          actualAmountOut: order.actualAmountOut,
+        });
+        
+        return;
+      }
       
-      // Mock success
-      const signature = 'mock_' + Math.random().toString(36).substr(2, 9);
+      // Real blockchain execution
+      const client = new ContinuumClient(
+        this.connection,
+        this.relayerWallet,
+        this.continuumProgramId
+      );
+      
+      // Build execute order instruction
+      const { transaction } = await client.buildExecuteOrderTransaction(
+        new PublicKey(order.poolId),
+        new BN(order.sequence),
+        {
+          computeUnitLimit: relayerConfig.computeUnitLimit,
+          priorityFeeLevel: relayerConfig.priorityFeeLevel
+        }
+      );
+      
+      // Add priority fee if configured
+      if (relayerConfig.priorityFeeLevel !== 'none') {
+        const priorityFeeMap = {
+          low: 10000,
+          medium: 50000,
+          high: 100000
+        };
+        const microLamports = priorityFeeMap[relayerConfig.priorityFeeLevel];
+        
+        transaction.add(
+          ComputeBudgetProgram.setComputeUnitPrice({
+            microLamports
+          })
+        );
+      }
+      
+      // Send and confirm transaction
+      const signature = await this.connection.sendTransaction(transaction, [this.relayerWallet], {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed'
+      });
+      
+      // Wait for confirmation
+      const latestBlockhash = await this.connection.getLatestBlockhash();
+      const confirmationResult = await this.connection.confirmTransaction({
+        signature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+      }, 'confirmed');
+      
+      if (confirmationResult.value.err) {
+        throw new Error(`Transaction failed: ${JSON.stringify(confirmationResult.value.err)}`);
+      }
+      
+      // Parse transaction result to get actual output amount
+      // In a real implementation, we would parse the transaction logs or account data
+      // For now, we'll estimate based on pool state
+      const poolConfig = relayerConfig.supportedPools.find(p => p.poolId === order.poolId);
+      if (poolConfig) {
+        const [tokenAVault, tokenBVault] = await Promise.all([
+          this.connection.getTokenAccountBalance(new PublicKey(poolConfig.tokenAVault)),
+          this.connection.getTokenAccountBalance(new PublicKey(poolConfig.tokenBVault))
+        ]);
+        
+        const tokenABalance = Number(tokenAVault.value.amount);
+        const tokenBBalance = Number(tokenBVault.value.amount);
+        
+        // Simple constant product calculation
+        const amountIn = parseInt(order.amountIn);
+        const k = tokenABalance * tokenBBalance;
+        const newTokenABalance = tokenABalance + amountIn;
+        const newTokenBBalance = k / newTokenABalance;
+        const amountOut = tokenBBalance - newTokenBBalance;
+        
+        order.actualAmountOut = Math.floor(amountOut * 0.9975).toString(); // Apply 0.25% fee
+        order.executionPrice = amountOut / amountIn;
+      } else {
+        // Fallback estimation
+        order.actualAmountOut = (parseInt(order.amountIn) * 0.98).toString();
+        order.executionPrice = 0.98;
+      }
+      
       order.status = 'executed';
       order.signature = signature;
-      order.actualAmountOut = (parseInt(order.amountIn) * 0.98).toString();
-      order.executionPrice = 0.98;
       order.executedAt = new Date().toISOString();
       
       const executionTime = Date.now() - startTime;
@@ -241,6 +342,7 @@ export class RelayerService extends EventEmitter {
         orderId,
         signature,
         executionTime,
+        actualAmountOut: order.actualAmountOut
       });
       
       this.emit('orderExecuted', orderId, {
