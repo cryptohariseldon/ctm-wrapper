@@ -16,28 +16,11 @@ pub struct SwapImmediate<'info> {
     )]
     pub fifo_state: Account<'info, FifoState>,
     
-    #[account(
-        seeds = [b"pool_registry", pool_id.key().as_ref()],
-        bump,
-        constraint = pool_registry.is_active @ ContinuumError::PoolNotRegistered,
-    )]
-    pub pool_registry: Account<'info, CpSwapPoolRegistry>,
-    
-    /// The pool authority PDA that signs for the swap
-    /// CHECK: This is a PDA that will be used to sign the CPI
-    #[account(
-        seeds = [b"cp_pool_authority", pool_id.key().as_ref()],
-        bump
-    )]
-    pub pool_authority: UncheckedAccount<'info>,
-    
-    /// CHECK: The pool to swap in
-    pub pool_id: UncheckedAccount<'info>,
-    
     /// CHECK: The CP-Swap program
     pub cp_swap_program: UncheckedAccount<'info>,
     
-    // Remaining accounts are passed through to CP-Swap swap instruction as-is
+    // All other accounts (pool_authority, pool_id, user accounts, etc.) 
+    // are passed through in remaining_accounts to avoid deserialization
 }
 
 pub fn swap_immediate(
@@ -45,10 +28,10 @@ pub fn swap_immediate(
     amount_in: u64,
     min_amount_out: u64,
     is_base_input: bool,
+    pool_id: Pubkey,
+    pool_authority_bump: u8,
 ) -> Result<()> {
     let fifo_state = &mut ctx.accounts.fifo_state;
-    let pool_authority_bump = ctx.bumps.pool_authority;
-    let pool_id = ctx.accounts.pool_id.key();
     
     // Increment sequence for tracking
     let sequence = fifo_state.current_sequence + 1;
@@ -71,18 +54,22 @@ pub fn swap_immediate(
         ix_data.extend_from_slice(&amount_in.to_le_bytes()); // amount_out
     }
     
-    // Build account metas - pool authority is first and is a signer
-    let mut account_metas = vec![
-        AccountMeta::new_readonly(ctx.accounts.pool_authority.key(), true),
-    ];
+    // Build account metas from remaining accounts
+    // First account should be pool authority (signer)
+    let mut account_metas = vec![];
     
     // Add all remaining accounts as they were passed
-    for account in ctx.remaining_accounts.iter() {
-        account_metas.push(if account.is_writable {
-            AccountMeta::new(account.key(), false)
+    for (i, account) in ctx.remaining_accounts.iter().enumerate() {
+        if i == 0 {
+            // First account is pool authority, must be signer
+            account_metas.push(AccountMeta::new_readonly(account.key(), true));
         } else {
-            AccountMeta::new_readonly(account.key(), false)
-        });
+            account_metas.push(if account.is_writable {
+                AccountMeta::new(account.key(), false)
+            } else {
+                AccountMeta::new_readonly(account.key(), false)
+            });
+        }
     }
     
     // Create the instruction
@@ -99,14 +86,10 @@ pub fn swap_immediate(
         &[pool_authority_bump],
     ];
     
-    // For invoke_signed, we pass all accounts including pool authority first
-    // Since pool authority is the first account in our instruction, it must be first here too
-    let mut all_accounts = vec![ctx.accounts.pool_authority.as_ref()];
-    all_accounts.extend_from_slice(ctx.remaining_accounts);
-    
+    // Pass all remaining accounts directly to invoke_signed
     invoke_signed(
         &ix,
-        &all_accounts,
+        ctx.remaining_accounts,
         &[pool_authority_seeds],
     )?;
     

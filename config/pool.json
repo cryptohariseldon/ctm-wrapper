@@ -1,0 +1,11 @@
+{
+  "poolId": "32U5ToCzoLjmVsh6fhkaAxxCDYzLT69gWu1fJn2RRJ1M",
+  "ammConfig": "CqoRnvYS3dBTzgcFJBAZ8LndgnTZGt8eWa2K4iM1sw52",
+  "tokenAMint": "A8hvVcYcYT6Z6VTWRTkPxLdrRjyPFNzzsz5HqfGfoEzD",
+  "tokenBMint": "EZiyF9ejjn3M7BJw6vv4kDc36tQ8cTnmSYg1ksGPq4ap",
+  "tokenAVault": "E9ESmVziydjDt5XJ3RUdWKwxtAeFcssppWToRfDQPr5j",
+  "tokenBVault": "J1UZiMU4P1QW8ADVjy5pM7GbEbCjYYtqdaZzYtszKjPf",
+  "lpMint": "GCmfPpV7kMbq82DHLhLFG4cHDnAzCqzhKtfAkeKiyE2A",
+  "continuum_authority": "EVeYG42zbYbjKe51bqMDUpU1UVdqLvQKxjvZm3pjDFqj",
+  "cpSwapProgram": "GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp"
+}

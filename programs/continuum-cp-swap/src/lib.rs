@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("A548C9LR926hnAWvYDjsXJddidhfzLf3bRb8dmYPgRKn");
+declare_id!("EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq");
 
 pub mod errors;
 pub mod instructions;
@@ -68,7 +68,9 @@ pub mod continuum_cp_swap {
         amount_in: u64,
         min_amount_out: u64,
         is_base_input: bool,
+        pool_id: Pubkey,
+        pool_authority_bump: u8,
     ) -> Result<()> {
-        instructions::swap_immediate(ctx, amount_in, min_amount_out, is_base_input)
+        instructions::swap_immediate(ctx, amount_in, min_amount_out, is_base_input, pool_id, pool_authority_bump)
     }
 }
