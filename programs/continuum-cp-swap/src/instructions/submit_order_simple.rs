@@ -47,11 +47,10 @@ pub struct SubmitOrderSimple<'info> {
 pub fn submit_order_simple(
     ctx: Context<SubmitOrderSimple>,
     amount_in: u64,
-    min_amount_out: u64,
+    _min_amount_out: u64,
     is_base_input: bool,
 ) -> Result<()> {
     let fifo_state = &mut ctx.accounts.fifo_state;
-    let clock = &ctx.accounts.clock;
     
     // Just increment sequence and emit event
     let sequence = fifo_state.current_sequence + 1;

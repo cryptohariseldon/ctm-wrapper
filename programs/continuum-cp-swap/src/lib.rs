@@ -51,4 +51,24 @@ pub mod continuum_cp_swap {
     ) -> Result<()> {
         instructions::cancel_order(ctx)
     }
+
+    /// Simplified submit order without PDA
+    pub fn submit_order_simple(
+        ctx: Context<SubmitOrderSimple>,
+        amount_in: u64,
+        min_amount_out: u64,
+        is_base_input: bool,
+    ) -> Result<()> {
+        instructions::submit_order_simple(ctx, amount_in, min_amount_out, is_base_input)
+    }
+
+    /// Immediate swap - submit and execute in one transaction
+    pub fn swap_immediate(
+        ctx: Context<SwapImmediate>,
+        amount_in: u64,
+        min_amount_out: u64,
+        is_base_input: bool,
+    ) -> Result<()> {
+        instructions::swap_immediate(ctx, amount_in, min_amount_out, is_base_input)
+    }
 }

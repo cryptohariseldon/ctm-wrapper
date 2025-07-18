@@ -1,0 +1,15 @@
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T08:54:36.739Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T08:57:55.613Z"}
+{"code":"MODULE_NOT_FOUND","level":"error","message":"Failed to load relayer keypair Cannot find module './relayer-keypair.json'\nRequire stack:\n- /home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts","requireStack":["/home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts"],"stack":"Error: Cannot find module './relayer-keypair.json'\nRequire stack:\n- /home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)\n    at Function._load (node:internal/modules/cjs/loader:1211:37)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\n    at Module.require (node:internal/modules/cjs/loader:1487:12)\n    at require (node:internal/modules/helpers:135:16)\n    at start (/home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts:387:27)\n    at Object.<anonymous> (/home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts:499:1)","timestamp":"2025-07-18T08:57:55.617Z"}
+{"level":"info","message":"Generating new relayer keypair...","timestamp":"2025-07-18T08:57:55.617Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T08:57:55.686Z"}
+{"level":"info","message":"Relayer balance: 0 SOL","timestamp":"2025-07-18T08:57:55.732Z"}
+{"level":"warn","message":"Low relayer balance! Please fund the relayer wallet.","timestamp":"2025-07-18T08:57:55.733Z"}
+{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T08:57:55.733Z"}
+{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T08:57:55.735Z"}
+{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T08:57:55.735Z"}
+{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T08:57:55.736Z"}
+{"amountIn":"1000000000","level":"info","message":"Received order submission","poolId":"BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2","timestamp":"2025-07-18T09:48:15.889Z","user":"HfW9bvrpHwohqGNvVmqV59dHsu2fKJFXMaRQCH2eDTV"}
+{"level":"info","message":"Order submitted","orderId":"ord_1752832095891_zldbfk17j","poolId":"BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2","sequence":"1","timestamp":"2025-07-18T09:48:15.894Z"}
+{"level":"info","message":"WebSocket connection established","path":"/ws/orders/ord_1752832095891_zldbfk17j","timestamp":"2025-07-18T09:48:15.898Z"}
+{"executionTime":2002,"level":"info","message":"Order executed","orderId":"ord_1752832095891_zldbfk17j","signature":"mock_6dz9u8z45","timestamp":"2025-07-18T09:48:18.537Z"}
