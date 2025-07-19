@@ -249,6 +249,67 @@ Authorization: Bearer {user_signature}
 GET /api/v1/pools
 ```
 
+#### Get Current Pool Price
+```http
+GET /api/v1/pools/:poolId/price
+```
+
+Response:
+```json
+{
+  "poolId": "9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT",
+  "tokenA": {
+    "mint": "8eLeJssGBw8Z2z1y3uz1xCwzrWa2QjCqAtH7Y88MjTND",
+    "symbol": "USDC",
+    "decimals": 6,
+    "balance": "1000000000",
+    "uiAmount": 1000
+  },
+  "tokenB": {
+    "mint": "99dB8f37b5n9rnU8Yc7D4Ey5XubJuCDDSacYwE4GPEtV",
+    "symbol": "WSOL",
+    "decimals": 9,
+    "balance": "5000000000000",
+    "uiAmount": 5000
+  },
+  "price": {
+    "USDCPerWSOL": "0.2",
+    "WSOLPerUSDC": "5.0"
+  },
+  "liquidity": {
+    "tokenA": "1000000000",
+    "tokenB": "5000000000000",
+    "totalValueUSD": null
+  },
+  "lastUpdate": "2024-01-15T12:00:00.000Z"
+}
+```
+
+#### Airdrop Tokens (Devnet Only)
+```http
+POST /api/v1/airdrop
+Content-Type: application/json
+
+{
+  "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+  "token": "USDC",  // "SOL", "USDC", or "WSOL"
+  "amount": 100     // Amount in token units (optional)
+}
+```
+
+Response:
+```json
+{
+  "success": true,
+  "token": "USDC",
+  "signature": "5eykt4UsFv8P8NJdTREpY1vzqYqyTZwkGZ7JZv7owLmnRmAMvRt2UHgGTVL3rSJE9SS",
+  "amount": 100,
+  "recipient": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+  "tokenAccount": "7kbnvuGBxxj8AG9qp8Scn56muWGaRaFqxg1FsRp3PaFT",
+  "newBalance": 100
+}
+```
+
 #### Get Statistics
 ```http
 GET /api/v1/stats
@@ -383,6 +444,44 @@ async function testRelayer() {
 
 testRelayer().catch(console.error);
 ```
+
+## Working Examples
+
+### Complete Swap Example
+
+For a complete, working example of how to submit swaps to the relayer, see [`examples/submit-swap.ts`](examples/submit-swap.ts). This example demonstrates:
+
+- Building versioned transactions (v0) with proper account ordering
+- Creating Associated Token Accounts (ATA) if needed
+- Submitting partially signed transactions to the relayer
+- Monitoring order execution via WebSocket
+- Handling both existing wallets and fresh wallets
+
+To run the example:
+
+```bash
+# Navigate to the examples directory
+cd examples
+
+# Run the swap example
+ts-node submit-swap.ts
+```
+
+Key features implemented in the example:
+- **Versioned Transactions**: Uses Solana's v0 transaction format for efficiency
+- **ATA Creation**: Automatically creates output token accounts if they don't exist
+- **Proper Signing**: Demonstrates partial signing by the user before submission
+- **Real-time Monitoring**: Connects via WebSocket to track order execution
+- **Error Handling**: Comprehensive error handling for common issues
+
+### Testing with Fresh Wallets
+
+The example also supports testing with fresh wallets. See [`examples/test-fresh-wallet.ts`](examples/test-fresh-wallet.ts) for a complete flow that:
+
+1. Creates a new wallet
+2. Funds it with SOL (via airdrop or manual funding)
+3. Airdrops USDC tokens using the relayer's airdrop endpoint
+4. Executes a swap from USDC to WSOL
 
 ## Client Integration Example
 
