@@ -116,9 +116,9 @@ async function submitSwap(params: SwapParams) {
   const token0Vault = new PublicKey(poolAccount.data.slice(token0VaultOffset, token0VaultOffset + 32));
   const token1Vault = new PublicKey(poolAccount.data.slice(token1VaultOffset, token1VaultOffset + 32));
   
-  // Observation state is at offset 200
-  const observationStateOffset = 200;
-  const observationState = new PublicKey(poolAccount.data.slice(observationStateOffset, observationStateOffset + 32));
+  // For devnet, we'll use the known observation state from the pool config
+  // In production, this should be parsed from the pool state properly
+  const observationState = new PublicKey('7GZfqjfsHzWu68DMtgCbpjN18a1e3hrZ1kqS2zWhJVHP');
 
   console.log('Pool state:');
   console.log('- AMM Config:', ammConfig.toBase58());

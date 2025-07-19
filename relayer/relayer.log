@@ -2,86 +2,36 @@
 > @continuum/relayer@0.1.0 dev
 > ts-node-dev --respawn --transpile-only src/server.ts --devnet
 
-[INFO] 08:18:45 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.8.3)
+[INFO] 09:01:00 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.8.3)
 Relayer configured for devnet
 RPC Endpoint: https://api.devnet.solana.com
 Continuum Program: EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq
 CP-Swap Program: GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
 Supported Pools: 1
-[32minfo[39m: Starting Continuum relayer service... {"timestamp":"2025-07-19T08:18:46.116Z"}
-[32minfo[39m: Relayer address: {"timestamp":"2025-07-19T08:18:46.119Z"}
-[32minfo[39m: Relayer balance: 4 SOL {"timestamp":"2025-07-19T08:18:46.684Z"}
-[32minfo[39m: Relayer service started {"timestamp":"2025-07-19T08:18:46.685Z"}
-[32minfo[39m: Relayer server listening on port 8085 {"timestamp":"2025-07-19T08:18:46.686Z"}
-[32minfo[39m: WebSocket endpoint: ws://localhost:8085/ws {"timestamp":"2025-07-19T08:18:46.686Z"}
-[32minfo[39m: HTTP API endpoint: http://localhost:8085/api/v1 {"timestamp":"2025-07-19T08:18:46.687Z"}
-[32minfo[39m: Processing USDC airdrop request {"amount":100000000,"ip":"::ffff:127.0.0.1","mint":"8eLeJssGBw8Z2z1y3uz1xCwzrWa2QjCqAtH7Y88MjTND","recipient":"5gsYpJFJyZ9oMDmpr6hoAU42P7vVXWz36QSkLtye2r2D","timestamp":"2025-07-19T08:47:03.672Z"}
-[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:50:27.499Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
-[32minfo[39m: Order submitted {"orderId":"ord_1752915027500_apidp164e","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"1","timestamp":"2025-07-19T08:50:27.501Z"}
-[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915027500_apidp164e","timestamp":"2025-07-19T08:50:27.507Z"}
-[32minfo[39m: Executing order {"orderId":"ord_1752915027500_apidp164e","sequence":"1","timestamp":"2025-07-19T08:50:27.610Z"}
-[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915027500_apidp164e","timestamp":"2025-07-19T08:50:27.661Z"}
-[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:51:26.508Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
-[32minfo[39m: Order submitted {"orderId":"ord_1752915086509_cmgbeq7yd","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"2","timestamp":"2025-07-19T08:51:26.510Z"}
-[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915086509_cmgbeq7yd","timestamp":"2025-07-19T08:51:26.514Z"}
-[32minfo[39m: Executing order {"orderId":"ord_1752915086509_cmgbeq7yd","sequence":"2","timestamp":"2025-07-19T08:51:26.721Z"}
-[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915086509_cmgbeq7yd","timestamp":"2025-07-19T08:51:26.759Z"}
-[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:52:17.229Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
-[32minfo[39m: Order submitted {"orderId":"ord_1752915137230_4nm1ufmdc","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"3","timestamp":"2025-07-19T08:52:17.232Z"}
-[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915137230_4nm1ufmdc","timestamp":"2025-07-19T08:52:17.236Z"}
-[32minfo[39m: Executing order {"orderId":"ord_1752915137230_4nm1ufmdc","sequence":"3","timestamp":"2025-07-19T08:52:17.808Z"}
-[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915137230_4nm1ufmdc","timestamp":"2025-07-19T08:52:17.832Z"}
-[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:54:19.616Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
-[32minfo[39m: Order submitted {"orderId":"ord_1752915259616_z6en1m7ei","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"4","timestamp":"2025-07-19T08:54:19.617Z"}
-[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915259616_z6en1m7ei","timestamp":"2025-07-19T08:54:19.620Z"}
-[32minfo[39m: Executing order {"orderId":"ord_1752915259616_z6en1m7ei","sequence":"4","timestamp":"2025-07-19T08:54:19.951Z"}
-[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915259616_z6en1m7ei","timestamp":"2025-07-19T08:54:20.118Z"}
-[INFO] 08:55:35 Restarting: /home/ubuntu/frm_may/fs2/ctm_wrapper_fs/relayer/src/relayerService.ts has been modified
-[32minfo[39m: Shutting down relayer... {"timestamp":"2025-07-19T08:55:35.675Z"}
-[32minfo[39m: Relayer service stopped {"timestamp":"2025-07-19T08:55:35.675Z"}
-[32minfo[39m: Relayer shutdown complete {"timestamp":"2025-07-19T08:55:35.676Z"}
-Relayer configured for devnet
-RPC Endpoint: https://api.devnet.solana.com
-Continuum Program: EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq
-CP-Swap Program: GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
-Supported Pools: 1
-[32minfo[39m: Starting Continuum relayer service... {"timestamp":"2025-07-19T08:55:36.165Z"}
-[32minfo[39m: Relayer address: {"timestamp":"2025-07-19T08:55:36.167Z"}
-[32minfo[39m: Relayer balance: 4 SOL {"timestamp":"2025-07-19T08:55:36.706Z"}
-[32minfo[39m: Relayer service started {"timestamp":"2025-07-19T08:55:36.706Z"}
-[32minfo[39m: Relayer server listening on port 8085 {"timestamp":"2025-07-19T08:55:36.708Z"}
-[32minfo[39m: WebSocket endpoint: ws://localhost:8085/ws {"timestamp":"2025-07-19T08:55:36.708Z"}
-[32minfo[39m: HTTP API endpoint: http://localhost:8085/api/v1 {"timestamp":"2025-07-19T08:55:36.708Z"}
-[INFO] 08:55:48 Restarting: /home/ubuntu/frm_may/fs2/ctm_wrapper_fs/relayer/src/relayerService.ts has been modified
-[32minfo[39m: Shutting down relayer... {"timestamp":"2025-07-19T08:55:48.316Z"}
-[32minfo[39m: Relayer service stopped {"timestamp":"2025-07-19T08:55:48.316Z"}
-[32minfo[39m: Relayer shutdown complete {"timestamp":"2025-07-19T08:55:48.317Z"}
-Relayer configured for devnet
-RPC Endpoint: https://api.devnet.solana.com
-Continuum Program: EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq
-CP-Swap Program: GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
-Supported Pools: 1
-[32minfo[39m: Starting Continuum relayer service... {"timestamp":"2025-07-19T08:55:48.802Z"}
-[32minfo[39m: Relayer address: {"timestamp":"2025-07-19T08:55:48.805Z"}
-[32minfo[39m: Relayer balance: 4 SOL {"timestamp":"2025-07-19T08:55:48.909Z"}
-[32minfo[39m: Relayer service started {"timestamp":"2025-07-19T08:55:48.910Z"}
-[32minfo[39m: Relayer server listening on port 8085 {"timestamp":"2025-07-19T08:55:48.911Z"}
-[32minfo[39m: WebSocket endpoint: ws://localhost:8085/ws {"timestamp":"2025-07-19T08:55:48.911Z"}
-[32minfo[39m: HTTP API endpoint: http://localhost:8085/api/v1 {"timestamp":"2025-07-19T08:55:48.912Z"}
-[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:57:57.344Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
-[32minfo[39m: Order submitted {"orderId":"ord_1752915477345_97qk5k3v8","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"1","timestamp":"2025-07-19T08:57:57.348Z"}
-[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915477345_97qk5k3v8","timestamp":"2025-07-19T08:57:57.353Z"}
-[32minfo[39m: Executing order {"orderId":"ord_1752915477345_97qk5k3v8","sequence":"1","timestamp":"2025-07-19T08:57:58.029Z"}
-[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915477345_97qk5k3v8","timestamp":"2025-07-19T08:57:58.223Z"}
-[32minfo[39m: Shutting down relayer... {"timestamp":"2025-07-19T08:58:44.169Z"}
-[32minfo[39m: Relayer service stopped {"timestamp":"2025-07-19T08:58:44.170Z"}
-[32minfo[39m: Relayer shutdown complete {"timestamp":"2025-07-19T08:58:44.170Z"}
-ification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","level":"error","message":"Order execution failed","orderId":"ord_1752915477345_97qk5k3v8","timestamp":"2025-07-19T08:57:58.223Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-19T08:58:44.169Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-19T08:58:54.531Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-19T08:58:54.533Z"}
-{"level":"info","message":"Relayer balance: 4 SOL","timestamp":"2025-07-19T08:58:55.061Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-19T08:58:55.062Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-19T08:58:55.063Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-19T08:58:55.063Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-19T08:58:55.064Z"}
+[32minfo[39m: Starting Continuum relayer service... {"timestamp":"2025-07-19T09:01:00.920Z"}
+[32minfo[39m: Relayer address: {"timestamp":"2025-07-19T09:01:00.922Z"}
+[32minfo[39m: Relayer balance: 4 SOL {"timestamp":"2025-07-19T09:01:01.496Z"}
+[32minfo[39m: Relayer service started {"timestamp":"2025-07-19T09:01:01.497Z"}
+[ERROR] 09:01:01 Error: listen EADDRINUSE: address already in use :::8085
+[31merror[39m: Uncaught exception listen EADDRINUSE: address already in use :::8085 {"address":"::","code":"EADDRINUSE","errno":-98,"port":8085,"stack":"Error: listen EADDRINUSE: address already in use :::8085\n    at Server.setupListenHandle [as _listen2] (node:net:1939:16)\n    at listenInCluster (node:net:1996:12)\n    at Server.listen (node:net:2101:7)\n    at start (/home/ubuntu/frm_may/fs2/ctm_wrapper_fs/relayer/src/server.ts:750:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)","syscall":"listen","timestamp":"2025-07-19T09:01:01.500Z"}
+[32minfo[39m: Shutting down relayer... {"timestamp":"2025-07-19T09:01:01.501Z"}
+[32minfo[39m: Relayer service stopped {"timestamp":"2025-07-19T09:01:01.502Z"}
+[32minfo[39m: Relayer shutdown complete {"timestamp":"2025-07-19T09:01:01.502Z"}
+{"amountIn":"10000000","level":"info","message":"Received order submission","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T09:01:37.074Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
+{"level":"info","message":"Order submitted","orderId":"ord_1752915697076_8pznncwxn","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"1","timestamp":"2025-07-19T09:01:37.078Z"}
+{"level":"info","message":"WebSocket connection established","path":"/ws/orders/ord_1752915697076_8pznncwxn","timestamp":"2025-07-19T09:01:37.084Z"}
+{"level":"info","message":"Executing order","orderId":"ord_1752915697076_8pznncwxn","sequence":"1","timestamp":"2025-07-19T09:01:37.217Z"}
+{"level":"info","message":"Using submitted transaction","timestamp":"2025-07-19T09:01:37.217Z"}
+{"error":"Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 1: custom program error: 0xbbf. \nLogs: \n[\n  \"Program log: Instruction: SwapBaseInput\",\n  \"Program log: AnchorError caused by account: observation_state. Error Code: AccountOwnedByWrongProgram. Error Number: 3007. Error Message: The given account is owned by a different program than expected.\",\n  \"Program log: Left:\",\n  \"Program log: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA\",\n  \"Program log: Right:\",\n  \"Program log: GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp\",\n  \"Program GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp consumed 13771 of 286366 compute units\",\n  \"Program GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp failed: custom program error: 0xbbf\",\n  \"Program EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq consumed 27255 of 299850 compute units\",\n  \"Program EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq failed: custom program error: 0xbbf\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.","level":"error","message":"Order execution failed","orderId":"ord_1752915697076_8pznncwxn","timestamp":"2025-07-19T09:01:37.239Z"}
+{"amountIn":"10000000","level":"info","message":"Received order submission","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T09:03:55.660Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
+{"level":"info","message":"Order submitted","orderId":"ord_1752915835661_ztpkjfc3v","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"2","timestamp":"2025-07-19T09:03:55.662Z"}
+{"level":"info","message":"WebSocket connection established","path":"/ws/orders/ord_1752915835661_ztpkjfc3v","timestamp":"2025-07-19T09:03:55.666Z"}
+{"level":"info","message":"Executing order","orderId":"ord_1752915835661_ztpkjfc3v","sequence":"2","timestamp":"2025-07-19T09:03:56.382Z"}
+{"level":"info","message":"Using submitted transaction","timestamp":"2025-07-19T09:03:56.383Z"}
+{"error":"Simulation failed. \nMessage: Transaction simulation failed: Error processing Instruction 1: custom program error: 0xbbf. \nLogs: \n[\n  \"Program log: Instruction: SwapBaseInput\",\n  \"Program log: AnchorError caused by account: observation_state. Error Code: AccountOwnedByWrongProgram. Error Number: 3007. Error Message: The given account is owned by a different program than expected.\",\n  \"Program log: Left:\",\n  \"Program log: BPFLoader2111111111111111111111111111111111\",\n  \"Program log: Right:\",\n  \"Program log: GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp\",\n  \"Program GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp consumed 13771 of 286398 compute units\",\n  \"Program GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp failed: custom program error: 0xbbf\",\n  \"Program EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq consumed 27223 of 299850 compute units\",\n  \"Program EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq failed: custom program error: 0xbbf\"\n]. \nCatch the `SendTransactionError` and call `getLogs()` on it for full details.","level":"error","message":"Order execution failed","orderId":"ord_1752915835661_ztpkjfc3v","timestamp":"2025-07-19T09:03:56.399Z"}
+{"amountIn":"10000000","level":"info","message":"Received order submission","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T09:04:50.988Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
+{"level":"info","message":"Order submitted","orderId":"ord_1752915890989_pv4a94nej","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"3","timestamp":"2025-07-19T09:04:50.992Z"}
+{"level":"info","message":"WebSocket connection established","path":"/ws/orders/ord_1752915890989_pv4a94nej","timestamp":"2025-07-19T09:04:50.996Z"}
+{"level":"info","message":"Executing order","orderId":"ord_1752915890989_pv4a94nej","sequence":"3","timestamp":"2025-07-19T09:04:51.450Z"}
+{"level":"info","message":"Using submitted transaction","timestamp":"2025-07-19T09:04:51.450Z"}
+{"executionTime":1015,"level":"info","message":"Order executed using submitted transaction","orderId":"ord_1752915890989_pv4a94nej","signature":"3UoJFq1tJc8oUFi4CvjhRLXwJab1MYuYMBx8efp4HNThzrXg5UBRz5FTnjxsKP7UthRmayTYQMrX6q8r7Kor8Giw","timestamp":"2025-07-19T09:04:52.465Z"}
