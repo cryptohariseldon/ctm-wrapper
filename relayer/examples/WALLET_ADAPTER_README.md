@@ -81,6 +81,37 @@ npm start
 6. Signed transaction is submitted to the relayer
 7. Order status is monitored via WebSocket
 
+## Common Issues and Solutions
+
+### "This transaction has already been processed" Error
+
+**Problem**: When using Anchor with wallet adapters, the `AnchorProvider` may automatically submit transactions to the blockchain when you call methods like `.instruction()` or `.rpc()`. This causes the transaction to be processed before it reaches the relayer, resulting in the "already processed" error.
+
+**Solution**: Use a dummy wallet for the AnchorProvider to prevent auto-submission:
+
+```typescript
+// WRONG: This may auto-submit transactions
+const provider = new AnchorProvider(connection, walletAdapter, options);
+
+// CORRECT: Use a dummy wallet to prevent auto-submission
+const dummyKeypair = Keypair.generate();
+const dummyWallet = new Wallet(dummyKeypair);
+const provider = new AnchorProvider(connection, dummyWallet, { 
+  commitment: 'confirmed', 
+  skipPreflight: true 
+});
+
+// Build instruction with dummy provider
+const instruction = await program.methods.swapImmediate(...).instruction();
+
+// Sign with user's actual wallet
+const signedTx = await walletAdapter.signTransaction(transaction);
+
+// Submit ONLY to relayer, not to blockchain
+```
+
+The fixed examples (`swap-with-wallet-adapter-fixed.tsx`) demonstrate this pattern correctly.
+
 ## Notes
 
 - Ensure you're connected to the correct network (devnet/mainnet)
@@ -88,3 +119,4 @@ npm start
 - Make sure you have sufficient SOL for transaction fees
 - For USDC swaps, ensure you have USDC tokens in your wallet
 - The relayer must be running and accessible from your browser
+- Always use the fixed examples to avoid transaction auto-submission issues
