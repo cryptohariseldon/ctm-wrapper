@@ -1,127 +1,87 @@
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T08:54:36.739Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T08:57:55.613Z"}
-{"code":"MODULE_NOT_FOUND","level":"error","message":"Failed to load relayer keypair Cannot find module './relayer-keypair.json'\nRequire stack:\n- /home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts","requireStack":["/home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts"],"stack":"Error: Cannot find module './relayer-keypair.json'\nRequire stack:\n- /home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)\n    at Function._load (node:internal/modules/cjs/loader:1211:37)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\n    at Module.require (node:internal/modules/cjs/loader:1487:12)\n    at require (node:internal/modules/helpers:135:16)\n    at start (/home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts:387:27)\n    at Object.<anonymous> (/home/ubuntu/frm_may/fairswap/continuum-cp-swap/relayer/src/server.ts:499:1)","timestamp":"2025-07-18T08:57:55.617Z"}
-{"level":"info","message":"Generating new relayer keypair...","timestamp":"2025-07-18T08:57:55.617Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T08:57:55.686Z"}
-{"level":"info","message":"Relayer balance: 0 SOL","timestamp":"2025-07-18T08:57:55.732Z"}
-{"level":"warn","message":"Low relayer balance! Please fund the relayer wallet.","timestamp":"2025-07-18T08:57:55.733Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T08:57:55.733Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T08:57:55.735Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T08:57:55.735Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T08:57:55.736Z"}
-{"amountIn":"1000000000","level":"info","message":"Received order submission","poolId":"BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2","timestamp":"2025-07-18T09:48:15.889Z","user":"HfW9bvrpHwohqGNvVmqV59dHsu2fKJFXMaRQCH2eDTV"}
-{"level":"info","message":"Order submitted","orderId":"ord_1752832095891_zldbfk17j","poolId":"BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2","sequence":"1","timestamp":"2025-07-18T09:48:15.894Z"}
-{"level":"info","message":"WebSocket connection established","path":"/ws/orders/ord_1752832095891_zldbfk17j","timestamp":"2025-07-18T09:48:15.898Z"}
-{"executionTime":2002,"level":"info","message":"Order executed","orderId":"ord_1752832095891_zldbfk17j","signature":"mock_6dz9u8z45","timestamp":"2025-07-18T09:48:18.537Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T14:17:20.914Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T14:17:20.918Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T14:20:11.036Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T14:20:11.039Z"}
-{"level":"info","message":"Relayer balance: 0 SOL","timestamp":"2025-07-18T14:20:11.086Z"}
-{"level":"warn","message":"Low relayer balance! Please fund the relayer wallet.","timestamp":"2025-07-18T14:20:11.087Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T14:20:11.087Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T14:20:11.088Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T14:20:11.089Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T14:20:11.089Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T14:20:20.576Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T14:20:36.611Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T14:20:36.614Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T14:20:36.661Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T14:20:36.662Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T14:20:36.663Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T14:20:36.664Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T14:20:36.664Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T14:21:11.786Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T14:21:14.807Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T14:21:14.810Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T14:21:14.862Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T14:21:14.862Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T14:21:14.864Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T14:21:14.864Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T14:21:14.864Z"}
-{"amount":1,"ip":"::ffff:49.37.117.251","level":"info","message":"Processing airdrop request","recipient":"CRbNEfDGMKHiWcibuJCbxP6KKvdGEDm2EZE46cBX4kHa","timestamp":"2025-07-18T14:47:25.302Z"}
-{"amount":1,"level":"info","message":"Airdrop successful","recipient":"CRbNEfDGMKHiWcibuJCbxP6KKvdGEDm2EZE46cBX4kHa","signature":"3bPFShtxwDwJ1c7vGepyUD314a5aJrXEexqPM8dGKhziSR615Dfbt8qXr7fDpJFK1Rf4Eg2z7mBPKWx9vFXihBJx","timestamp":"2025-07-18T14:47:25.563Z"}
-{"amountIn":"1000000000","level":"info","message":"Received order submission","poolId":"BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2","timestamp":"2025-07-18T14:48:50.008Z","user":"CRbNEfDGMKHiWcibuJCbxP6KKvdGEDm2EZE46cBX4kHa"}
-{"level":"info","message":"Order submitted","orderId":"ord_1752850130009_i0nuaissk","poolId":"BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2","sequence":"1","timestamp":"2025-07-18T14:48:50.010Z"}
-{"level":"info","message":"Executing order","orderId":"ord_1752850130009_i0nuaissk","sequence":"1","timestamp":"2025-07-18T14:48:50.411Z"}
-{"level":"info","message":"WebSocket connection established","path":"/ws/orders/ord_1752850130009_i0nuaissk","timestamp":"2025-07-18T14:48:50.524Z"}
-{"executionTime":2003,"level":"info","message":"Order executed (mock)","orderId":"ord_1752850130009_i0nuaissk","signature":"mock_vfwdd1yif","timestamp":"2025-07-18T14:48:52.414Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T15:05:06.139Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:05:06.755Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:05:06.757Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T15:05:06.807Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T15:05:06.808Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T15:05:06.809Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T15:05:06.809Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T15:05:06.809Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T15:07:25.819Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:07:26.393Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:07:26.395Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T15:07:26.438Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T15:07:26.438Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T15:07:26.439Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T15:07:26.440Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T15:07:26.440Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T15:07:42.931Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:07:43.532Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:07:43.534Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T15:07:43.576Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T15:07:43.577Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T15:07:43.578Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T15:07:43.579Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T15:07:43.579Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T15:08:49.397Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:20:21.935Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:20:21.937Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T15:20:21.986Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T15:20:21.986Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T15:20:21.988Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T15:20:21.988Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T15:20:21.989Z"}
-{"amount":0.1,"ip":"::1","level":"info","message":"Processing SOL airdrop request","recipient":"8YPqJxPNmYFcgmFQPResoLfwWcewTEBSfcv9MLs8HBTe","timestamp":"2025-07-18T15:25:21.286Z"}
-{"amount":0.1,"level":"info","message":"SOL airdrop successful","recipient":"8YPqJxPNmYFcgmFQPResoLfwWcewTEBSfcv9MLs8HBTe","signature":"xrVSV1LhPQ8zi7scGkWKZJdnifZNH8Km6khSUBbubwhEjGCMCdKrbjk3J2bWpasZosmN6CxpvykkBqayuEWR8wb","timestamp":"2025-07-18T15:25:21.441Z"}
-{"amount":0.1,"ip":"::ffff:127.0.0.1","level":"info","message":"Processing SOL airdrop request","recipient":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq","timestamp":"2025-07-18T15:26:28.540Z"}
-{"amount":0.1,"level":"info","message":"SOL airdrop successful","recipient":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq","signature":"2dwfEgCiVirqUDdfRLLV7ZYYWeEQcDAKTvWz6pHCRNfEPXdFkrygP8KKKQ2ypeqt4VfZk2SZr2muS5GVohFmUkda","timestamp":"2025-07-18T15:26:28.692Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T15:28:45.203Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:28:45.809Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:28:45.811Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T15:28:45.854Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T15:28:45.854Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T15:28:45.856Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T15:28:45.856Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T15:28:45.856Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T15:29:04.815Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:29:09.462Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:29:09.464Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T15:29:09.505Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T15:29:09.506Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T15:29:09.507Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T15:29:09.507Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T15:29:09.507Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T15:30:02.422Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:31:22.044Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:31:22.046Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T15:31:22.090Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T15:31:22.090Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T15:31:22.091Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T15:31:22.092Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T15:31:22.092Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:31:49.524Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:31:49.526Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:44:09.736Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:44:09.738Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:45:59.191Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:45:59.194Z"}
-{"level":"info","message":"Relayer balance: 100 SOL","timestamp":"2025-07-18T15:45:59.241Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T15:45:59.242Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T15:45:59.243Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T15:45:59.244Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T15:45:59.244Z"}
-{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-18T15:47:46.916Z"}
-{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-18T15:47:50.373Z"}
-{"level":"info","message":"Relayer address:","timestamp":"2025-07-18T15:47:50.375Z"}
-{"level":"info","message":"Relayer balance: 2 SOL","timestamp":"2025-07-18T15:47:50.927Z"}
-{"level":"info","message":"Relayer service started","timestamp":"2025-07-18T15:47:50.928Z"}
-{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-18T15:47:50.930Z"}
-{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-18T15:47:50.930Z"}
-{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-18T15:47:50.930Z"}
+
+> @continuum/relayer@0.1.0 dev
+> ts-node-dev --respawn --transpile-only src/server.ts --devnet
+
+[INFO] 08:18:45 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.8.3)
+Relayer configured for devnet
+RPC Endpoint: https://api.devnet.solana.com
+Continuum Program: EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq
+CP-Swap Program: GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
+Supported Pools: 1
+[32minfo[39m: Starting Continuum relayer service... {"timestamp":"2025-07-19T08:18:46.116Z"}
+[32minfo[39m: Relayer address: {"timestamp":"2025-07-19T08:18:46.119Z"}
+[32minfo[39m: Relayer balance: 4 SOL {"timestamp":"2025-07-19T08:18:46.684Z"}
+[32minfo[39m: Relayer service started {"timestamp":"2025-07-19T08:18:46.685Z"}
+[32minfo[39m: Relayer server listening on port 8085 {"timestamp":"2025-07-19T08:18:46.686Z"}
+[32minfo[39m: WebSocket endpoint: ws://localhost:8085/ws {"timestamp":"2025-07-19T08:18:46.686Z"}
+[32minfo[39m: HTTP API endpoint: http://localhost:8085/api/v1 {"timestamp":"2025-07-19T08:18:46.687Z"}
+[32minfo[39m: Processing USDC airdrop request {"amount":100000000,"ip":"::ffff:127.0.0.1","mint":"8eLeJssGBw8Z2z1y3uz1xCwzrWa2QjCqAtH7Y88MjTND","recipient":"5gsYpJFJyZ9oMDmpr6hoAU42P7vVXWz36QSkLtye2r2D","timestamp":"2025-07-19T08:47:03.672Z"}
+[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:50:27.499Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
+[32minfo[39m: Order submitted {"orderId":"ord_1752915027500_apidp164e","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"1","timestamp":"2025-07-19T08:50:27.501Z"}
+[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915027500_apidp164e","timestamp":"2025-07-19T08:50:27.507Z"}
+[32minfo[39m: Executing order {"orderId":"ord_1752915027500_apidp164e","sequence":"1","timestamp":"2025-07-19T08:50:27.610Z"}
+[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915027500_apidp164e","timestamp":"2025-07-19T08:50:27.661Z"}
+[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:51:26.508Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
+[32minfo[39m: Order submitted {"orderId":"ord_1752915086509_cmgbeq7yd","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"2","timestamp":"2025-07-19T08:51:26.510Z"}
+[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915086509_cmgbeq7yd","timestamp":"2025-07-19T08:51:26.514Z"}
+[32minfo[39m: Executing order {"orderId":"ord_1752915086509_cmgbeq7yd","sequence":"2","timestamp":"2025-07-19T08:51:26.721Z"}
+[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915086509_cmgbeq7yd","timestamp":"2025-07-19T08:51:26.759Z"}
+[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:52:17.229Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
+[32minfo[39m: Order submitted {"orderId":"ord_1752915137230_4nm1ufmdc","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"3","timestamp":"2025-07-19T08:52:17.232Z"}
+[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915137230_4nm1ufmdc","timestamp":"2025-07-19T08:52:17.236Z"}
+[32minfo[39m: Executing order {"orderId":"ord_1752915137230_4nm1ufmdc","sequence":"3","timestamp":"2025-07-19T08:52:17.808Z"}
+[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915137230_4nm1ufmdc","timestamp":"2025-07-19T08:52:17.832Z"}
+[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:54:19.616Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
+[32minfo[39m: Order submitted {"orderId":"ord_1752915259616_z6en1m7ei","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"4","timestamp":"2025-07-19T08:54:19.617Z"}
+[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915259616_z6en1m7ei","timestamp":"2025-07-19T08:54:19.620Z"}
+[32minfo[39m: Executing order {"orderId":"ord_1752915259616_z6en1m7ei","sequence":"4","timestamp":"2025-07-19T08:54:19.951Z"}
+[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915259616_z6en1m7ei","timestamp":"2025-07-19T08:54:20.118Z"}
+[INFO] 08:55:35 Restarting: /home/ubuntu/frm_may/fs2/ctm_wrapper_fs/relayer/src/relayerService.ts has been modified
+[32minfo[39m: Shutting down relayer... {"timestamp":"2025-07-19T08:55:35.675Z"}
+[32minfo[39m: Relayer service stopped {"timestamp":"2025-07-19T08:55:35.675Z"}
+[32minfo[39m: Relayer shutdown complete {"timestamp":"2025-07-19T08:55:35.676Z"}
+Relayer configured for devnet
+RPC Endpoint: https://api.devnet.solana.com
+Continuum Program: EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq
+CP-Swap Program: GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
+Supported Pools: 1
+[32minfo[39m: Starting Continuum relayer service... {"timestamp":"2025-07-19T08:55:36.165Z"}
+[32minfo[39m: Relayer address: {"timestamp":"2025-07-19T08:55:36.167Z"}
+[32minfo[39m: Relayer balance: 4 SOL {"timestamp":"2025-07-19T08:55:36.706Z"}
+[32minfo[39m: Relayer service started {"timestamp":"2025-07-19T08:55:36.706Z"}
+[32minfo[39m: Relayer server listening on port 8085 {"timestamp":"2025-07-19T08:55:36.708Z"}
+[32minfo[39m: WebSocket endpoint: ws://localhost:8085/ws {"timestamp":"2025-07-19T08:55:36.708Z"}
+[32minfo[39m: HTTP API endpoint: http://localhost:8085/api/v1 {"timestamp":"2025-07-19T08:55:36.708Z"}
+[INFO] 08:55:48 Restarting: /home/ubuntu/frm_may/fs2/ctm_wrapper_fs/relayer/src/relayerService.ts has been modified
+[32minfo[39m: Shutting down relayer... {"timestamp":"2025-07-19T08:55:48.316Z"}
+[32minfo[39m: Relayer service stopped {"timestamp":"2025-07-19T08:55:48.316Z"}
+[32minfo[39m: Relayer shutdown complete {"timestamp":"2025-07-19T08:55:48.317Z"}
+Relayer configured for devnet
+RPC Endpoint: https://api.devnet.solana.com
+Continuum Program: EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq
+CP-Swap Program: GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
+Supported Pools: 1
+[32minfo[39m: Starting Continuum relayer service... {"timestamp":"2025-07-19T08:55:48.802Z"}
+[32minfo[39m: Relayer address: {"timestamp":"2025-07-19T08:55:48.805Z"}
+[32minfo[39m: Relayer balance: 4 SOL {"timestamp":"2025-07-19T08:55:48.909Z"}
+[32minfo[39m: Relayer service started {"timestamp":"2025-07-19T08:55:48.910Z"}
+[32minfo[39m: Relayer server listening on port 8085 {"timestamp":"2025-07-19T08:55:48.911Z"}
+[32minfo[39m: WebSocket endpoint: ws://localhost:8085/ws {"timestamp":"2025-07-19T08:55:48.911Z"}
+[32minfo[39m: HTTP API endpoint: http://localhost:8085/api/v1 {"timestamp":"2025-07-19T08:55:48.912Z"}
+[32minfo[39m: Received order submission {"amountIn":"10000000","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","timestamp":"2025-07-19T08:57:57.344Z","user":"GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq"}
+[32minfo[39m: Order submitted {"orderId":"ord_1752915477345_97qk5k3v8","poolId":"9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT","sequence":"1","timestamp":"2025-07-19T08:57:57.348Z"}
+[32minfo[39m: WebSocket connection established {"path":"/ws/orders/ord_1752915477345_97qk5k3v8","timestamp":"2025-07-19T08:57:57.353Z"}
+[32minfo[39m: Executing order {"orderId":"ord_1752915477345_97qk5k3v8","sequence":"1","timestamp":"2025-07-19T08:57:58.029Z"}
+[31merror[39m: Order execution failed {"error":"Signature verification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","orderId":"ord_1752915477345_97qk5k3v8","timestamp":"2025-07-19T08:57:58.223Z"}
+[32minfo[39m: Shutting down relayer... {"timestamp":"2025-07-19T08:58:44.169Z"}
+[32minfo[39m: Relayer service stopped {"timestamp":"2025-07-19T08:58:44.170Z"}
+[32minfo[39m: Relayer shutdown complete {"timestamp":"2025-07-19T08:58:44.170Z"}
+ification failed.\nMissing signature for public key [`GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq`].","level":"error","message":"Order execution failed","orderId":"ord_1752915477345_97qk5k3v8","timestamp":"2025-07-19T08:57:58.223Z"}
+{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-19T08:58:44.169Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-19T08:58:54.531Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-19T08:58:54.533Z"}
+{"level":"info","message":"Relayer balance: 4 SOL","timestamp":"2025-07-19T08:58:55.061Z"}
+{"level":"info","message":"Relayer service started","timestamp":"2025-07-19T08:58:55.062Z"}
+{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-19T08:58:55.063Z"}
+{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-19T08:58:55.063Z"}
+{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-19T08:58:55.064Z"}

@@ -35,6 +35,9 @@ interface OrderStatus {
   signature?: string;
   executedAt?: string;
   error?: string;
+  transaction?: Transaction | VersionedTransaction;
+  minAmountOut?: string;
+  isBaseInput?: boolean;
 }
 
 interface PoolInfo {
@@ -95,7 +98,8 @@ export class RelayerService extends EventEmitter {
       amountIn: params.amountIn,
       minAmountOut: params.minAmountOut,
       isBaseInput: params.isBaseInput,
-    } as any;
+      transaction: params.transaction,
+    };
     
     this.orders.set(orderId, orderStatus);
     this.executionQueue.push(orderId);
@@ -249,116 +253,97 @@ export class RelayerService extends EventEmitter {
         return;
       }
       
-      // Real blockchain execution - build swap_immediate instruction
-      const poolId = new PublicKey(order.poolId);
-      const user = new PublicKey(order.userPublicKey);
-      
-      // Find pool config
-      const poolConfig = relayerConfig.supportedPools.find(p => p.poolId === order.poolId);
-      if (!poolConfig) {
-        throw new Error('Pool configuration not found');
+      // Use the submitted transaction if available
+      if (order.transaction) {
+        this.logger.info('Using submitted transaction');
+        
+        let signature: string;
+        
+        // Handle both legacy and versioned transactions
+        if (order.transaction instanceof VersionedTransaction) {
+          // For versioned transactions, we need to add the relayer's signature
+          const messageV0 = order.transaction.message;
+          const signers = [this.relayerWallet];
+          
+          // Check if relayer needs to sign
+          const relayerIndex = messageV0.staticAccountKeys.findIndex(
+            key => key.equals(this.relayerWallet.publicKey)
+          );
+          
+          if (relayerIndex !== -1 && !order.transaction.signatures[relayerIndex]) {
+            // Add relayer signature
+            order.transaction.sign([this.relayerWallet]);
+          }
+          
+          signature = await this.connection.sendTransaction(order.transaction, {
+            skipPreflight: false,
+            preflightCommitment: 'confirmed'
+          });
+        } else {
+          // Legacy transaction
+          const transaction = order.transaction as Transaction;
+          
+          // Check if relayer needs to sign
+          const needsRelayerSig = transaction.signatures.some(
+            sig => sig.publicKey.equals(this.relayerWallet.publicKey) && !sig.signature
+          );
+          
+          if (needsRelayerSig) {
+            // Add relayer signature
+            transaction.partialSign(this.relayerWallet);
+          }
+          
+          // Send transaction
+          signature = await this.connection.sendRawTransaction(
+            transaction.serialize(),
+            {
+              skipPreflight: false,
+              preflightCommitment: 'confirmed'
+            }
+          );
+        }
+        
+        // Wait for confirmation
+        const latestBlockhash = await this.connection.getLatestBlockhash();
+        const confirmationResult = await this.connection.confirmTransaction({
+          signature,
+          blockhash: latestBlockhash.blockhash,
+          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+        }, 'confirmed');
+        
+        if (confirmationResult.value.err) {
+          throw new Error(`Transaction failed: ${JSON.stringify(confirmationResult.value.err)}`);
+        }
+        
+        // Update order status
+        order.status = 'executed';
+        order.signature = signature;
+        order.executedAt = new Date().toISOString();
+        order.actualAmountOut = order.amountIn; // TODO: Parse from logs
+        order.executionPrice = 1.0; // TODO: Calculate from actual swap
+        
+        const executionTime = Date.now() - startTime;
+        this.stats.successfulOrders++;
+        this.stats.totalExecutionTime += executionTime;
+        
+        this.logger.info('Order executed using submitted transaction', {
+          orderId,
+          signature,
+          executionTime
+        });
+        
+        this.emit('orderExecuted', orderId, {
+          signature,
+          executionPrice: order.executionPrice,
+          actualAmountOut: order.actualAmountOut,
+        });
+        
+        return;
       }
       
-      // Parse amounts
-      const amountIn = new BN(order.amountIn);
-      const minAmountOut = new BN(order.minAmountOut || '0');
-      
-      // Determine if it's base input (USDC is base in our setup)
-      const isBaseInput = poolConfig.tokenASymbol === 'USDC';
-      
-      // Build swap_immediate instruction
-      const swapIx = await this.buildSwapImmediateInstruction(
-        poolId,
-        user,
-        amountIn,
-        minAmountOut,
-        isBaseInput,
-        poolConfig
-      );
-      
-      const transaction = new Transaction().add(swapIx);
-      
-      // Add priority fee if configured
-      if (relayerConfig.priorityFeeLevel !== 'none') {
-        const priorityFeeMap = {
-          low: 10000,
-          medium: 50000,
-          high: 100000
-        };
-        const microLamports = priorityFeeMap[relayerConfig.priorityFeeLevel];
-        
-        transaction.add(
-          ComputeBudgetProgram.setComputeUnitPrice({
-            microLamports
-          })
-        );
-      }
-      
-      // Send and confirm transaction
-      const signature = await this.connection.sendTransaction(transaction, [this.relayerWallet], {
-        skipPreflight: false,
-        preflightCommitment: 'confirmed'
-      });
-      
-      // Wait for confirmation
-      const latestBlockhash = await this.connection.getLatestBlockhash();
-      const confirmationResult = await this.connection.confirmTransaction({
-        signature,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-      }, 'confirmed');
-      
-      if (confirmationResult.value.err) {
-        throw new Error(`Transaction failed: ${JSON.stringify(confirmationResult.value.err)}`);
-      }
-      
-      // Parse transaction result to get actual output amount
-      // In a real implementation, we would parse the transaction logs or account data
-      // For now, we'll estimate based on pool state
-      if (poolConfig) {
-        const [tokenAVault, tokenBVault] = await Promise.all([
-          this.connection.getTokenAccountBalance(new PublicKey(poolConfig.tokenAVault)),
-          this.connection.getTokenAccountBalance(new PublicKey(poolConfig.tokenBVault))
-        ]);
-        
-        const tokenABalance = Number(tokenAVault.value.amount);
-        const tokenBBalance = Number(tokenBVault.value.amount);
-        
-        // Simple constant product calculation
-        const amountIn = parseInt(order.amountIn);
-        const k = tokenABalance * tokenBBalance;
-        const newTokenABalance = tokenABalance + amountIn;
-        const newTokenBBalance = k / newTokenABalance;
-        const amountOut = tokenBBalance - newTokenBBalance;
-        
-        order.actualAmountOut = Math.floor(amountOut * 0.9975).toString(); // Apply 0.25% fee
-        order.executionPrice = amountOut / amountIn;
-      } else {
-        // Fallback estimation
-        order.actualAmountOut = (parseInt(order.amountIn) * 0.98).toString();
-        order.executionPrice = 0.98;
-      }
-      
-      order.status = 'executed';
-      order.signature = signature;
-      order.executedAt = new Date().toISOString();
-      
-      const executionTime = Date.now() - startTime;
-      this.stats.successfulOrders++;
-      this.stats.totalExecutionTime += executionTime;
-      
-      this.logger.info('Order executed', {
-        orderId,
-        signature,
-        executionTime,
-        actualAmountOut: order.actualAmountOut
-      });
-      
-      this.emit('orderExecuted', orderId, {
-        signature,
-        executionPrice: order.executionPrice,
-        actualAmountOut: order.actualAmountOut,
-      });
+      // Fallback: build our own transaction if none provided
+      this.logger.warn('No transaction provided, building our own');
+      throw new Error('Transaction required for order execution');
       
     } catch (error) {
       order.status = 'failed';

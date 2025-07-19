@@ -4,8 +4,8 @@ exports.RelayerService = void 0;
 const web3_js_1 = require("@solana/web3.js");
 const anchor_1 = require("@coral-xyz/anchor");
 const events_1 = require("events");
-const cp_swap_sdk_1 = require("@continuum/cp-swap-sdk");
 const config_1 = require("./config");
+const spl_token_1 = require("@solana/spl-token");
 class RelayerService extends events_1.EventEmitter {
     constructor(connection, relayerWallet, continuumProgramId, cpSwapProgramId, logger) {
         super();
@@ -45,6 +45,9 @@ class RelayerService extends events_1.EventEmitter {
             poolId: params.poolId.toBase58(),
             userPublicKey: params.userPublicKey.toBase58(),
             amountIn: params.amountIn,
+            minAmountOut: params.minAmountOut,
+            isBaseInput: params.isBaseInput,
+            transaction: params.transaction,
         };
         this.orders.set(orderId, orderStatus);
         this.executionQueue.push(orderId);
@@ -90,21 +93,16 @@ class RelayerService extends events_1.EventEmitter {
         return { refund: '0' }; // No refund in this mock
     }
     getSupportedPools() {
-        // Mock pool list
-        return [
-            'BhPUKnKuzpEYNhSSNxkze51tMVza25rgXfEv5LWgGng2',
-            'HaDuGHuAQEocjTvN4nTM3c1uHGv3KSTasen58aizEhVW',
-        ];
+        return config_1.config.supportedPools.map(pool => pool.poolId);
     }
     async getSupportedPoolsWithInfo() {
-        // Mock pool info
-        return this.getSupportedPools().map(poolId => ({
-            poolId,
-            token0: 'So11111111111111111111111111111111111111112',
-            token1: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-            fee: 0.003,
-            liquidity: '1000000000000',
-            volume24h: '50000000000',
+        return config_1.config.supportedPools.map(pool => ({
+            poolId: pool.poolId,
+            token0: pool.tokenAMint,
+            token1: pool.tokenBMint,
+            fee: 0.0025, // 0.25% fee
+            liquidity: '1000000000000', // Placeholder
+            volume24h: '0', // Placeholder
             isActive: true,
         }));
     }
@@ -149,8 +147,8 @@ class RelayerService extends events_1.EventEmitter {
         const startTime = Date.now();
         try {
             this.logger.info('Executing order', { orderId, sequence: order.sequence });
-            // If using mock mode, keep the old behavior
-            if (config_1.config.enableMockMode) {
+            // Use mock mode for localnet or if explicitly enabled
+            if (config_1.config.enableMockMode && !config_1.config.isDevnet) {
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 const signature = 'mock_' + Math.random().toString(36).substr(2, 9);
                 order.status = 'executed';
@@ -173,84 +171,75 @@ class RelayerService extends events_1.EventEmitter {
                 });
                 return;
             }
-            // Real blockchain execution
-            // Build execute order instruction
-            const executeParams = {
-                poolId: new web3_js_1.PublicKey(order.poolId),
-                fifoSequence: new anchor_1.BN(order.sequence),
-                executor: this.relayerWallet.publicKey,
-            };
-            const executeIx = (0, cp_swap_sdk_1.createExecuteOrderInstruction)(executeParams);
-            const transaction = new web3_js_1.Transaction().add(executeIx);
-            // Add priority fee if configured
-            if (config_1.config.priorityFeeLevel !== 'none') {
-                const priorityFeeMap = {
-                    low: 10000,
-                    medium: 50000,
-                    high: 100000
-                };
-                const microLamports = priorityFeeMap[config_1.config.priorityFeeLevel];
-                transaction.add(web3_js_1.ComputeBudgetProgram.setComputeUnitPrice({
-                    microLamports
-                }));
+            // Use the submitted transaction if available
+            if (order.transaction) {
+                this.logger.info('Using submitted transaction');
+                let signature;
+                // Handle both legacy and versioned transactions
+                if (order.transaction instanceof web3_js_1.VersionedTransaction) {
+                    // For versioned transactions, we need to add the relayer's signature
+                    const messageV0 = order.transaction.message;
+                    const signers = [this.relayerWallet];
+                    // Check if relayer needs to sign
+                    const relayerIndex = messageV0.staticAccountKeys.findIndex(key => key.equals(this.relayerWallet.publicKey));
+                    if (relayerIndex !== -1 && !order.transaction.signatures[relayerIndex]) {
+                        // Add relayer signature
+                        order.transaction.sign([this.relayerWallet]);
+                    }
+                    signature = await this.connection.sendTransaction(order.transaction, {
+                        skipPreflight: false,
+                        preflightCommitment: 'confirmed'
+                    });
+                }
+                else {
+                    // Legacy transaction
+                    const transaction = order.transaction;
+                    // Check if relayer needs to sign
+                    const needsRelayerSig = transaction.signatures.some(sig => sig.publicKey.equals(this.relayerWallet.publicKey) && !sig.signature);
+                    if (needsRelayerSig) {
+                        // Add relayer signature
+                        transaction.partialSign(this.relayerWallet);
+                    }
+                    // Send transaction
+                    signature = await this.connection.sendRawTransaction(transaction.serialize(), {
+                        skipPreflight: false,
+                        preflightCommitment: 'confirmed'
+                    });
+                }
+                // Wait for confirmation
+                const latestBlockhash = await this.connection.getLatestBlockhash();
+                const confirmationResult = await this.connection.confirmTransaction({
+                    signature,
+                    blockhash: latestBlockhash.blockhash,
+                    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+                }, 'confirmed');
+                if (confirmationResult.value.err) {
+                    throw new Error(`Transaction failed: ${JSON.stringify(confirmationResult.value.err)}`);
+                }
+                // Update order status
+                order.status = 'executed';
+                order.signature = signature;
+                order.executedAt = new Date().toISOString();
+                order.actualAmountOut = order.amountIn; // TODO: Parse from logs
+                order.executionPrice = 1.0; // TODO: Calculate from actual swap
+                const executionTime = Date.now() - startTime;
+                this.stats.successfulOrders++;
+                this.stats.totalExecutionTime += executionTime;
+                this.logger.info('Order executed using submitted transaction', {
+                    orderId,
+                    signature,
+                    executionTime
+                });
+                this.emit('orderExecuted', orderId, {
+                    signature,
+                    executionPrice: order.executionPrice,
+                    actualAmountOut: order.actualAmountOut,
+                });
+                return;
             }
-            // Send and confirm transaction
-            const signature = await this.connection.sendTransaction(transaction, [this.relayerWallet], {
-                skipPreflight: false,
-                preflightCommitment: 'confirmed'
-            });
-            // Wait for confirmation
-            const latestBlockhash = await this.connection.getLatestBlockhash();
-            const confirmationResult = await this.connection.confirmTransaction({
-                signature,
-                blockhash: latestBlockhash.blockhash,
-                lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-            }, 'confirmed');
-            if (confirmationResult.value.err) {
-                throw new Error(`Transaction failed: ${JSON.stringify(confirmationResult.value.err)}`);
-            }
-            // Parse transaction result to get actual output amount
-            // In a real implementation, we would parse the transaction logs or account data
-            // For now, we'll estimate based on pool state
-            const poolConfig = config_1.config.supportedPools.find(p => p.poolId === order.poolId);
-            if (poolConfig) {
-                const [tokenAVault, tokenBVault] = await Promise.all([
-                    this.connection.getTokenAccountBalance(new web3_js_1.PublicKey(poolConfig.tokenAVault)),
-                    this.connection.getTokenAccountBalance(new web3_js_1.PublicKey(poolConfig.tokenBVault))
-                ]);
-                const tokenABalance = Number(tokenAVault.value.amount);
-                const tokenBBalance = Number(tokenBVault.value.amount);
-                // Simple constant product calculation
-                const amountIn = parseInt(order.amountIn);
-                const k = tokenABalance * tokenBBalance;
-                const newTokenABalance = tokenABalance + amountIn;
-                const newTokenBBalance = k / newTokenABalance;
-                const amountOut = tokenBBalance - newTokenBBalance;
-                order.actualAmountOut = Math.floor(amountOut * 0.9975).toString(); // Apply 0.25% fee
-                order.executionPrice = amountOut / amountIn;
-            }
-            else {
-                // Fallback estimation
-                order.actualAmountOut = (parseInt(order.amountIn) * 0.98).toString();
-                order.executionPrice = 0.98;
-            }
-            order.status = 'executed';
-            order.signature = signature;
-            order.executedAt = new Date().toISOString();
-            const executionTime = Date.now() - startTime;
-            this.stats.successfulOrders++;
-            this.stats.totalExecutionTime += executionTime;
-            this.logger.info('Order executed', {
-                orderId,
-                signature,
-                executionTime,
-                actualAmountOut: order.actualAmountOut
-            });
-            this.emit('orderExecuted', orderId, {
-                signature,
-                executionPrice: order.executionPrice,
-                actualAmountOut: order.actualAmountOut,
-            });
+            // Fallback: build our own transaction if none provided
+            this.logger.warn('No transaction provided, building our own');
+            throw new Error('Transaction required for order execution');
         }
         catch (error) {
             order.status = 'failed';
@@ -262,6 +251,53 @@ class RelayerService extends events_1.EventEmitter {
             });
             this.emit('orderFailed', orderId, error);
         }
+    }
+    async buildSwapImmediateInstruction(poolId, user, amountIn, minAmountOut, isBaseInput, poolConfig) {
+        // Derive PDAs
+        const [fifoState] = web3_js_1.PublicKey.findProgramAddressSync([Buffer.from('fifo_state')], this.continuumProgramId);
+        const [poolAuthority, poolAuthorityBump] = web3_js_1.PublicKey.findProgramAddressSync([Buffer.from('cp_pool_authority'), poolId.toBuffer()], this.continuumProgramId);
+        const [cpSwapAuthority] = web3_js_1.PublicKey.findProgramAddressSync([Buffer.from('vault_and_lp_mint_auth_seed')], this.cpSwapProgramId);
+        // Get user token accounts
+        const tokenAMint = new web3_js_1.PublicKey(poolConfig.tokenAMint);
+        const tokenBMint = new web3_js_1.PublicKey(poolConfig.tokenBMint);
+        const userTokenA = (0, spl_token_1.getAssociatedTokenAddressSync)(tokenAMint, user);
+        const userTokenB = (0, spl_token_1.getAssociatedTokenAddressSync)(tokenBMint, user);
+        // Determine source and destination based on swap direction
+        const userSourceToken = isBaseInput ? userTokenA : userTokenB;
+        const userDestToken = isBaseInput ? userTokenB : userTokenA;
+        // Build instruction data
+        const discriminator = Buffer.from([175, 131, 44, 121, 171, 170, 38, 18]);
+        const data = Buffer.concat([
+            discriminator,
+            amountIn.toArrayLike(Buffer, 'le', 8),
+            minAmountOut.toArrayLike(Buffer, 'le', 8),
+            Buffer.from([isBaseInput ? 1 : 0]),
+            poolId.toBuffer(),
+            Buffer.from([poolAuthorityBump]),
+        ]);
+        return new web3_js_1.TransactionInstruction({
+            keys: [
+                // Required accounts for Continuum
+                { pubkey: fifoState, isSigner: false, isWritable: true },
+                { pubkey: this.cpSwapProgramId, isSigner: false, isWritable: false },
+                // Remaining accounts for CP-Swap CPI - user must be first
+                { pubkey: user, isSigner: true, isWritable: false },
+                { pubkey: cpSwapAuthority, isSigner: false, isWritable: false },
+                { pubkey: new web3_js_1.PublicKey(poolConfig.ammConfig), isSigner: false, isWritable: false },
+                { pubkey: poolId, isSigner: false, isWritable: true },
+                { pubkey: userSourceToken, isSigner: false, isWritable: true },
+                { pubkey: userDestToken, isSigner: false, isWritable: true },
+                { pubkey: new web3_js_1.PublicKey(poolConfig.tokenAVault), isSigner: false, isWritable: true },
+                { pubkey: new web3_js_1.PublicKey(poolConfig.tokenBVault), isSigner: false, isWritable: true },
+                { pubkey: spl_token_1.TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+                { pubkey: spl_token_1.TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+                { pubkey: tokenAMint, isSigner: false, isWritable: false },
+                { pubkey: tokenBMint, isSigner: false, isWritable: false },
+                { pubkey: new web3_js_1.PublicKey(poolConfig.observationState), isSigner: false, isWritable: true },
+            ],
+            programId: this.continuumProgramId,
+            data,
+        });
     }
 }
 exports.RelayerService = RelayerService;

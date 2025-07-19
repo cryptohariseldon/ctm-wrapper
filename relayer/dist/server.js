@@ -14,6 +14,7 @@ const winston_1 = __importDefault(require("winston"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const helmet_1 = __importDefault(require("helmet"));
 const zod_1 = require("zod");
+const spl_token_1 = require("@solana/spl-token");
 // Configure logger
 const logger = winston_1.default.createLogger({
     level: process.env.LOG_LEVEL || 'info',
@@ -342,7 +343,7 @@ app.get('/api/v1/pools/:poolId/price', async (req, res) => {
         logger.error('Failed to get pool price', error);
         res.status(500).json({
             error: 'Failed to fetch pool price',
-            message: error.message
+            message: error instanceof Error ? error.message : String(error)
         });
     }
 });
@@ -366,11 +367,12 @@ app.post('/api/v1/airdrop', async (req, res) => {
                     return false;
                 }
             }, 'Invalid public key'),
+            token: zod_1.z.enum(['SOL', 'USDC', 'WSOL']).optional(),
             amount: zod_1.z.number().optional()
         });
         const params = airdropSchema.parse(req.body);
         const recipientPubkey = new web3_js_1.PublicKey(params.address);
-        const amountLamports = params.amount || (config_1.config.airdropAmountSol * 1e9);
+        const tokenType = params.token || 'USDC';
         // Check rate limit
         const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
         const lastRequest = airdropLastRequest.get(clientIp) || 0;
@@ -381,43 +383,134 @@ app.post('/api/v1/airdrop', async (req, res) => {
                 error: `Rate limited. Please wait ${remainingTime} seconds before requesting another airdrop`
             });
         }
-        // Validate amount
-        const maxAmount = 10 * 1e9; // 10 SOL max
-        if (amountLamports < 0 || amountLamports > maxAmount) {
-            return res.status(400).json({
-                error: `Invalid amount. Must be between 0 and ${maxAmount / 1e9} SOL`
+        // Handle different token types
+        if (tokenType === 'SOL') {
+            // SOL airdrop
+            const amountLamports = params.amount ? params.amount * 1e9 : config_1.config.airdropAmountSol * 1e9;
+            // Validate amount
+            const maxAmount = 2 * 1e9; // 2 SOL max
+            if (amountLamports < 0 || amountLamports > maxAmount) {
+                return res.status(400).json({
+                    error: `Invalid amount. Must be between 0 and ${maxAmount / 1e9} SOL`
+                });
+            }
+            logger.info('Processing SOL airdrop request', {
+                recipient: recipientPubkey.toBase58(),
+                amount: amountLamports / 1e9,
+                ip: clientIp
+            });
+            // Request airdrop
+            const signature = await connection.requestAirdrop(recipientPubkey, amountLamports);
+            // Wait for confirmation
+            const latestBlockhash = await connection.getLatestBlockhash();
+            await connection.confirmTransaction({
+                signature,
+                blockhash: latestBlockhash.blockhash,
+                lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+            });
+            // Update rate limit
+            airdropLastRequest.set(clientIp, now);
+            // Get new balance
+            const newBalance = await connection.getBalance(recipientPubkey);
+            res.json({
+                success: true,
+                token: 'SOL',
+                signature,
+                amount: amountLamports / 1e9,
+                recipient: recipientPubkey.toBase58(),
+                newBalance: newBalance / 1e9
+            });
+            logger.info('SOL airdrop successful', {
+                signature,
+                recipient: recipientPubkey.toBase58(),
+                amount: amountLamports / 1e9
             });
         }
-        logger.info('Processing airdrop request', {
-            recipient: recipientPubkey.toBase58(),
-            amount: amountLamports / 1e9,
-            ip: clientIp
-        });
-        // Request airdrop
-        const signature = await connection.requestAirdrop(recipientPubkey, amountLamports);
-        // Wait for confirmation
-        const latestBlockhash = await connection.getLatestBlockhash();
-        await connection.confirmTransaction({
-            signature,
-            blockhash: latestBlockhash.blockhash,
-            lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
-        });
-        // Update rate limit
-        airdropLastRequest.set(clientIp, now);
-        // Get new balance
-        const newBalance = await connection.getBalance(recipientPubkey);
-        res.json({
-            success: true,
-            signature,
-            amount: amountLamports,
-            recipient: recipientPubkey.toBase58(),
-            newBalance
-        });
-        logger.info('Airdrop successful', {
-            signature,
-            recipient: recipientPubkey.toBase58(),
-            amount: amountLamports / 1e9
-        });
+        else {
+            // Token airdrop (USDC or WSOL)
+            if (!config_1.config.isDevnet || !config_1.config.tokens) {
+                return res.status(400).json({
+                    error: 'Token airdrops only available on devnet'
+                });
+            }
+            const tokenConfig = config_1.config.tokens[tokenType];
+            if (!tokenConfig) {
+                return res.status(400).json({
+                    error: `Token ${tokenType} not supported`
+                });
+            }
+            // Determine amount based on token type
+            let tokenAmount;
+            if (params.amount) {
+                tokenAmount = params.amount;
+            }
+            else {
+                // Default amounts from constants.json
+                const defaultAmounts = {
+                    USDC: 1000,
+                    WSOL: 10
+                };
+                tokenAmount = defaultAmounts[tokenType] || 100;
+            }
+            const tokenMint = new web3_js_1.PublicKey(tokenConfig.mint);
+            const decimals = tokenConfig.decimals;
+            const amountUnits = tokenAmount * Math.pow(10, decimals);
+            logger.info(`Processing ${tokenType} airdrop request`, {
+                recipient: recipientPubkey.toBase58(),
+                amount: tokenAmount,
+                mint: tokenMint.toBase58(),
+                ip: clientIp
+            });
+            // Get or create recipient token account
+            const recipientTokenAccount = (0, spl_token_1.getAssociatedTokenAddressSync)(tokenMint, recipientPubkey);
+            // Get relayer token account (source of tokens)
+            const relayerTokenAccount = (0, spl_token_1.getAssociatedTokenAddressSync)(tokenMint, relayerWallet.publicKey);
+            // Check relayer balance
+            try {
+                const relayerBalance = await connection.getTokenAccountBalance(relayerTokenAccount);
+                if (parseInt(relayerBalance.value.amount) < amountUnits) {
+                    return res.status(500).json({
+                        error: `Insufficient ${tokenType} balance in relayer wallet`
+                    });
+                }
+            }
+            catch (err) {
+                return res.status(500).json({
+                    error: `Relayer doesn't have ${tokenType} tokens. Please fund the relayer wallet.`
+                });
+            }
+            // Build transaction
+            const transaction = new web3_js_1.Transaction();
+            // Check if recipient token account exists
+            const recipientAccountInfo = await connection.getAccountInfo(recipientTokenAccount);
+            if (!recipientAccountInfo) {
+                // Create associated token account
+                transaction.add((0, spl_token_1.createAssociatedTokenAccountInstruction)(relayerWallet.publicKey, recipientTokenAccount, recipientPubkey, tokenMint, spl_token_1.TOKEN_PROGRAM_ID, spl_token_1.ASSOCIATED_TOKEN_PROGRAM_ID));
+            }
+            // Add transfer instruction
+            transaction.add((0, spl_token_1.createTransferInstruction)(relayerTokenAccount, recipientTokenAccount, relayerWallet.publicKey, amountUnits, [], spl_token_1.TOKEN_PROGRAM_ID));
+            // Send and confirm transaction
+            const signature = await (0, web3_js_1.sendAndConfirmTransaction)(connection, transaction, [relayerWallet]);
+            // Update rate limit
+            airdropLastRequest.set(clientIp, now);
+            // Get new balance
+            const newBalanceResponse = await connection.getTokenAccountBalance(recipientTokenAccount);
+            const newBalance = parseFloat(newBalanceResponse.value.uiAmountString || '0');
+            res.json({
+                success: true,
+                token: tokenType,
+                signature,
+                amount: tokenAmount,
+                recipient: recipientPubkey.toBase58(),
+                tokenAccount: recipientTokenAccount.toBase58(),
+                newBalance
+            });
+            logger.info(`${tokenType} airdrop successful`, {
+                signature,
+                recipient: recipientPubkey.toBase58(),
+                amount: tokenAmount
+            });
+        }
     }
     catch (error) {
         logger.error('Airdrop failed', error);

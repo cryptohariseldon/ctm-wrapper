@@ -1,0 +1,23 @@
+{
+  "name": "relayer-examples",
+  "version": "1.0.0",
+  "description": "Examples for interacting with the Continuum Relayer",
+  "scripts": {
+    "airdrop": "ts-node airdrop.ts",
+    "check-price": "ts-node check-price.ts",
+    "submit-swap": "ts-node submit-swap.ts"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.95.3",
+    "axios": "^1.7.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@types/ws": "^8.5.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  }
+}
