@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuum Swap with Wallet Adapter</title>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@solana/spl-token@latest/lib/index.iife.min.js"></script>
+    <script src="https://unpkg.com/@coral-xyz/anchor@latest/dist/browser/index.js"></script>
+    <script src="https://unpkg.com/bn.js@latest/lib/bn.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #512da8;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #6746c3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .info {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Continuum CP-Swap with Wallet Adapter</h1>
+        
+        <div>
+            <h3>1. Connect Wallet</h3>
+            <button id="connectBtn">Connect Phantom</button>
+            <button id="disconnectBtn" style="display:none">Disconnect</button>
+            <div id="walletInfo"></div>
+        </div>
+
+        <div>
+            <h3>2. Swap Configuration</h3>
+            <div>
+                <label>Pool ID:</label><br>
+                <input type="text" id="poolId" value="9AJUf9ZQ2sWq93ose12BePBn4sq36cyqE98MiZraFLJT" style="width: 400px;">
+            </div>
+            <div>
+                <label>Amount In (USDC):</label><br>
+                <input type="number" id="amountIn" value="10" step="0.01">
+            </div>
+            <div>
+                <label>Min Amount Out (WSOL):</label><br>
+                <input type="number" id="minAmountOut" value="0" step="0.001">
+            </div>
+            <div>
+                <label>
+                    <input type="checkbox" id="isBaseInput" checked>
+                    Swap USDC → WSOL (unchecked: WSOL → USDC)
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <h3>3. Execute Swap</h3>
+            <button id="checkBalanceBtn" disabled>Check Balances</button>
+            <button id="swapBtn" disabled>Execute Swap</button>
+        </div>
+
+        <div id="status" class="status" style="display:none;"></div>
+        <div id="balances" style="margin-top: 20px;"></div>
+        <div id="txInfo" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        // Configuration
+        const RELAYER_URL = 'http://localhost:8085';
+        const RPC_URL = 'https://api.devnet.solana.com';
+        
+        // Program IDs
+        const CONTINUUM_PROGRAM_ID = new solanaWeb3.PublicKey('EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq');
+        const CP_SWAP_PROGRAM_ID = new solanaWeb3.PublicKey('GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp');
+        
+        let provider = null;
+        let phantomProvider = null;
+
+        // Initialize
+        window.addEventListener('load', () => {
+            if ('solana' in window) {
+                phantomProvider = window.solana;
+                if (phantomProvider.isPhantom) {
+                    console.log('Phantom wallet found!');
+                }
+            } else {
+                showStatus('Phantom wallet not found! Please install it from phantom.app', 'error');
+            }
+        });
+
+        // Connect wallet
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            if (!phantomProvider) {
+                showStatus('Phantom wallet not found!', 'error');
+                return;
+            }
+
+            try {
+                const resp = await phantomProvider.connect();
+                const publicKey = resp.publicKey.toString();
+                
+                document.getElementById('walletInfo').innerHTML = `
+                    <p><strong>Connected:</strong> ${publicKey}</p>
+                `;
+                
+                document.getElementById('connectBtn').style.display = 'none';
+                document.getElementById('disconnectBtn').style.display = 'inline-block';
+                document.getElementById('checkBalanceBtn').disabled = false;
+                document.getElementById('swapBtn').disabled = false;
+                
+                showStatus('Wallet connected successfully!', 'success');
+            } catch (err) {
+                showStatus(`Connection failed: ${err.message}`, 'error');
+            }
+        });
+
+        // Disconnect wallet
+        document.getElementById('disconnectBtn').addEventListener('click', async () => {
+            await phantomProvider.disconnect();
+            
+            document.getElementById('walletInfo').innerHTML = '';
+            document.getElementById('connectBtn').style.display = 'inline-block';
+            document.getElementById('disconnectBtn').style.display = 'none';
+            document.getElementById('checkBalanceBtn').disabled = true;
+            document.getElementById('swapBtn').disabled = true;
+            
+            showStatus('Wallet disconnected', 'info');
+        });
+
+        // Check balances
+        document.getElementById('checkBalanceBtn').addEventListener('click', async () => {
+            if (!phantomProvider.publicKey) {
+                showStatus('Please connect wallet first', 'error');
+                return;
+            }
+
+            try {
+                const connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
+                const publicKey = phantomProvider.publicKey;
+                
+                // Get SOL balance
+                const solBalance = await connection.getBalance(publicKey);
+                
+                // Get token balances
+                const usdcMint = new solanaWeb3.PublicKey('8eLeJssGBw8Z2z1y3uz1xCwzrWa2QjCqAtH7Y88MjTND');
+                const wsolMint = new solanaWeb3.PublicKey('So11111111111111111111111111111111111111112');
+                
+                const usdcAccount = splToken.getAssociatedTokenAddressSync(usdcMint, publicKey);
+                const wsolAccount = splToken.getAssociatedTokenAddressSync(wsolMint, publicKey);
+                
+                let usdcBalance = 0;
+                let wsolBalance = 0;
+                
+                try {
+                    const usdcInfo = await connection.getTokenAccountBalance(usdcAccount);
+                    usdcBalance = usdcInfo.value.uiAmount || 0;
+                } catch (e) {
+                    console.log('No USDC account');
+                }
+                
+                try {
+                    const wsolInfo = await connection.getTokenAccountBalance(wsolAccount);
+                    wsolBalance = wsolInfo.value.uiAmount || 0;
+                } catch (e) {
+                    console.log('No WSOL account');
+                }
+                
+                document.getElementById('balances').innerHTML = `
+                    <h4>Current Balances:</h4>
+                    <p>SOL: ${(solBalance / 1e9).toFixed(4)}</p>
+                    <p>USDC: ${usdcBalance.toFixed(2)}</p>
+                    <p>WSOL: ${wsolBalance.toFixed(4)}</p>
+                `;
+                
+                showStatus('Balances updated', 'success');
+            } catch (err) {
+                showStatus(`Failed to check balances: ${err.message}`, 'error');
+            }
+        });
+
+        // Execute swap
+        document.getElementById('swapBtn').addEventListener('click', async () => {
+            if (!phantomProvider.publicKey) {
+                showStatus('Please connect wallet first', 'error');
+                return;
+            }
+
+            const poolId = document.getElementById('poolId').value;
+            const amountIn = document.getElementById('amountIn').value;
+            const minAmountOut = document.getElementById('minAmountOut').value;
+            const isBaseInput = document.getElementById('isBaseInput').checked;
+
+            try {
+                showStatus('Building transaction...', 'info');
+                
+                const connection = new solanaWeb3.Connection(RPC_URL, 'confirmed');
+                const publicKey = phantomProvider.publicKey;
+                
+                // Fetch pool info
+                const poolInfoResponse = await fetch(`${RELAYER_URL}/api/v1/pools/${poolId}/price`);
+                const poolInfo = await poolInfoResponse.json();
+                
+                // Determine token mints
+                const tokenAMint = new solanaWeb3.PublicKey(poolInfo.tokenA.mint);
+                const tokenBMint = new solanaWeb3.PublicKey(poolInfo.tokenB.mint);
+                
+                const inputMint = isBaseInput ? tokenAMint : tokenBMint;
+                const outputMint = isBaseInput ? tokenBMint : tokenAMint;
+                
+                // User token accounts
+                const userInputAccount = splToken.getAssociatedTokenAddressSync(inputMint, publicKey);
+                const userOutputAccount = splToken.getAssociatedTokenAddressSync(outputMint, publicKey);
+                
+                // Load IDL (in production, bundle this with webpack or similar)
+                const idlResponse = await fetch('/continuum_cp_swap.json');
+                const idl = await idlResponse.json();
+                
+                // Create anchor provider
+                const anchorConnection = new anchor.web3.Connection(RPC_URL, 'confirmed');
+                const anchorProvider = new anchor.AnchorProvider(
+                    anchorConnection,
+                    phantomProvider,
+                    { commitment: 'confirmed' }
+                );
+                const program = new anchor.Program(idl, anchorProvider);
+                
+                // Derive PDAs
+                const [fifoState] = solanaWeb3.PublicKey.findProgramAddressSync(
+                    [Buffer.from('fifo_state')],
+                    CONTINUUM_PROGRAM_ID
+                );
+                
+                const [poolAuthority, poolAuthorityBump] = solanaWeb3.PublicKey.findProgramAddressSync(
+                    [Buffer.from('cp_pool_authority'), new solanaWeb3.PublicKey(poolId).toBuffer()],
+                    CONTINUUM_PROGRAM_ID
+                );
+                
+                const [cpSwapAuthority] = solanaWeb3.PublicKey.findProgramAddressSync(
+                    [Buffer.from('vault_and_lp_mint_auth_seed')],
+                    CP_SWAP_PROGRAM_ID
+                );
+                
+                // Get pool state
+                const poolAccount = await connection.getAccountInfo(new solanaWeb3.PublicKey(poolId));
+                
+                // Parse pool state
+                const ammConfigOffset = 8;
+                const ammConfig = new solanaWeb3.PublicKey(poolAccount.data.slice(ammConfigOffset, ammConfigOffset + 32));
+                
+                const token0VaultOffset = 72;
+                const token1VaultOffset = 104;
+                const token0Vault = new solanaWeb3.PublicKey(poolAccount.data.slice(token0VaultOffset, token0VaultOffset + 32));
+                const token1Vault = new solanaWeb3.PublicKey(poolAccount.data.slice(token1VaultOffset, token1VaultOffset + 32));
+                
+                const observationState = new solanaWeb3.PublicKey('7GZfqjfsHzWu68DMtgCbpjN18a1e3hrZ1kqS2zWhJVHP');
+                
+                // Build swap instruction
+                const amountInBN = new BN(amountIn * (isBaseInput ? 1e6 : 1e9)); // USDC: 6 decimals, WSOL: 9 decimals
+                const minAmountOutBN = new BN(minAmountOut * (isBaseInput ? 1e9 : 1e6));
+                
+                const swapIx = await program.methods
+                    .swapImmediate(
+                        amountInBN,
+                        minAmountOutBN,
+                        isBaseInput,
+                        new solanaWeb3.PublicKey(poolId),
+                        poolAuthorityBump
+                    )
+                    .accountsPartial({
+                        fifoState: fifoState,
+                        cpSwapProgram: CP_SWAP_PROGRAM_ID,
+                    })
+                    .remainingAccounts([
+                        { pubkey: publicKey, isSigner: true, isWritable: false },
+                        { pubkey: cpSwapAuthority, isSigner: false, isWritable: false },
+                        { pubkey: ammConfig, isSigner: false, isWritable: false },
+                        { pubkey: new solanaWeb3.PublicKey(poolId), isSigner: false, isWritable: true },
+                        { pubkey: userInputAccount, isSigner: false, isWritable: true },
+                        { pubkey: userOutputAccount, isSigner: false, isWritable: true },
+                        { pubkey: isBaseInput ? token0Vault : token1Vault, isSigner: false, isWritable: true },
+                        { pubkey: isBaseInput ? token1Vault : token0Vault, isSigner: false, isWritable: true },
+                        { pubkey: splToken.TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+                        { pubkey: splToken.TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+                        { pubkey: inputMint, isSigner: false, isWritable: false },
+                        { pubkey: outputMint, isSigner: false, isWritable: false },
+                        { pubkey: observationState, isSigner: false, isWritable: true },
+                    ])
+                    .instruction();
+                
+                // Build transaction
+                const modifyComputeUnits = solanaWeb3.ComputeBudgetProgram.setComputeUnitLimit({
+                    units: 300000
+                });
+                
+                const instructions = [modifyComputeUnits];
+                
+                // Check if output account exists
+                const outputAccountInfo = await connection.getAccountInfo(userOutputAccount);
+                if (!outputAccountInfo) {
+                    instructions.push(
+                        splToken.createAssociatedTokenAccountInstruction(
+                            publicKey,
+                            userOutputAccount,
+                            publicKey,
+                            outputMint,
+                            splToken.TOKEN_PROGRAM_ID,
+                            splToken.ASSOCIATED_TOKEN_PROGRAM_ID
+                        )
+                    );
+                }
+                
+                instructions.push(swapIx);
+                
+                // Get blockhash
+                const { blockhash } = await connection.getLatestBlockhash();
+                
+                // Create v0 message
+                const messageV0 = new solanaWeb3.TransactionMessage({
+                    payerKey: publicKey,
+                    recentBlockhash: blockhash,
+                    instructions,
+                }).compileToV0Message();
+                
+                // Create versioned transaction
+                const transaction = new solanaWeb3.VersionedTransaction(messageV0);
+                
+                showStatus('Please approve transaction in your wallet...', 'info');
+                
+                // Sign with Phantom
+                const signedTransaction = await phantomProvider.signTransaction(transaction);
+                
+                // Submit to relayer
+                const orderData = {
+                    transaction: Buffer.from(signedTransaction.serialize()).toString('base64'),
+                    poolId: poolId,
+                    amountIn: (amountIn * (isBaseInput ? 1e6 : 1e9)).toString(),
+                    minAmountOut: (minAmountOut * (isBaseInput ? 1e9 : 1e6)).toString(),
+                    isBaseInput: isBaseInput,
+                    userPublicKey: publicKey.toBase58()
+                };
+                
+                showStatus('Submitting to relayer...', 'info');
+                
+                const response = await fetch(`${RELAYER_URL}/api/v1/orders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showStatus('Swap submitted successfully!', 'success');
+                    document.getElementById('txInfo').innerHTML = `
+                        <h4>Transaction Info:</h4>
+                        <p>Order ID: ${result.orderId}</p>
+                        <p>Status: ${result.status}</p>
+                        <p>Monitor order status in the relayer logs or via WebSocket.</p>
+                    `;
+                    
+                    // Monitor order via WebSocket
+                    monitorOrder(result.orderId);
+                } else {
+                    showStatus(`Failed to submit swap: ${result.error || result.message}`, 'error');
+                }
+                
+            } catch (err) {
+                showStatus(`Swap failed: ${err.message}`, 'error');
+                console.error(err);
+            }
+        });
+
+        function monitorOrder(orderId) {
+            const wsUrl = RELAYER_URL.replace('http', 'ws');
+            const ws = new WebSocket(`${wsUrl}/ws/orders/${orderId}`);
+            
+            ws.onmessage = (event) => {
+                const update = JSON.parse(event.data);
+                
+                if (update.status === 'executed') {
+                    showStatus(`Swap executed successfully! Tx: ${update.signature}`, 'success');
+                    document.getElementById('txInfo').innerHTML += `
+                        <p><strong>Transaction:</strong> <a href="https://explorer.solana.com/tx/${update.signature}?cluster=devnet" target="_blank">${update.signature}</a></p>
+                        <p><strong>Actual output:</strong> ${update.actualAmountOut}</p>
+                    `;
+                    ws.close();
+                } else if (update.status === 'failed') {
+                    showStatus(`Swap failed: ${update.error}`, 'error');
+                    ws.close();
+                }
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

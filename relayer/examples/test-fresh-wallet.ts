@@ -49,6 +49,32 @@ async function testWithFreshWallet() {
   console.log('\n⏳ Waiting for account to be ready...');
   await new Promise(resolve => setTimeout(resolve, 5000));
   
+  // Airdrop USDC tokens
+  console.log('\n💵 Requesting USDC airdrop...');
+  try {
+    const axios = require('axios');
+    const airdropResponse = await axios.post('http://localhost:8085/api/v1/airdrop', {
+      address: freshWallet.publicKey.toBase58(),
+      token: 'USDC',
+      amount: 100 // 100 USDC
+    });
+    
+    console.log('✅ USDC airdrop successful!');
+    console.log(`- Amount: ${airdropResponse.data.amount} USDC`);
+    console.log(`- Signature: ${airdropResponse.data.signature}`);
+    console.log(`- New balance: ${airdropResponse.data.newBalance} USDC`);
+    
+    // Wait for airdrop to be confirmed
+    await new Promise(resolve => setTimeout(resolve, 3000));
+  } catch (error: any) {
+    console.error('❌ USDC airdrop failed:', error.response?.data || error.message);
+    console.log('\nPlease ensure:');
+    console.log('1. The relayer is running on port 8085');
+    console.log('2. The relayer has USDC tokens to airdrop');
+    console.log('3. Airdrop is enabled in the relayer config');
+    return;
+  }
+  
   // Test swap
   console.log('\n🔄 Testing swap with fresh wallet...');
   
