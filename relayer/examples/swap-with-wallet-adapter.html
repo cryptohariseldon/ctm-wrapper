@@ -267,12 +267,20 @@
                 const idlResponse = await fetch('/continuum_cp_swap.json');
                 const idl = await idlResponse.json();
                 
-                // Create anchor provider
+                // IMPORTANT: Create a dummy wallet to prevent auto-submission
+                const dummyKeypair = solanaWeb3.Keypair.generate();
+                const dummyWallet = {
+                    publicKey: dummyKeypair.publicKey,
+                    signTransaction: async (tx) => tx,
+                    signAllTransactions: async (txs) => txs
+                };
+                
+                // Create anchor provider with dummy wallet
                 const anchorConnection = new anchor.web3.Connection(RPC_URL, 'confirmed');
                 const anchorProvider = new anchor.AnchorProvider(
                     anchorConnection,
-                    phantomProvider,
-                    { commitment: 'confirmed' }
+                    dummyWallet,
+                    { commitment: 'confirmed', skipPreflight: true }
                 );
                 const program = new anchor.Program(idl, anchorProvider);
                 
