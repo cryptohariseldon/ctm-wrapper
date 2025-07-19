@@ -169,9 +169,29 @@ async function submitSwap(params: SwapParams) {
 
   // Build instructions array
   const instructions: TransactionInstruction[] = [
-    modifyComputeUnits,
-    swapIx
+    modifyComputeUnits
   ];
+  
+  // Check if output token account exists, create if needed
+  const outputAccountInfo = await connection.getAccountInfo(userOutputAccount);
+  if (!outputAccountInfo) {
+    console.log('Creating output token account...');
+    const { createAssociatedTokenAccountInstruction, ASSOCIATED_TOKEN_PROGRAM_ID } = await import('@solana/spl-token');
+    
+    instructions.push(
+      createAssociatedTokenAccountInstruction(
+        params.userWallet.publicKey, // payer
+        userOutputAccount, // ata
+        params.userWallet.publicKey, // owner
+        outputMint, // mint
+        TOKEN_PROGRAM_ID,
+        ASSOCIATED_TOKEN_PROGRAM_ID
+      )
+    );
+  }
+  
+  // Add swap instruction
+  instructions.push(swapIx);
 
   // Get recent blockhash
   const { blockhash } = await connection.getLatestBlockhash();
