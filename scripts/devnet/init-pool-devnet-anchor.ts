@@ -10,7 +10,7 @@ import { RaydiumCpSwap } from "../../raydium-cp-swap/target/types/raydium_cp_swa
 // Configuration - DEVNET
 const TOKEN_CONFIG_FILE = path.join(__dirname, 'devnet-tokens.json');
 const POOL_CONFIG_FILE = path.join(__dirname, 'devnet-pool.json');
-const CONTINUUM_PROGRAM_ID = new PublicKey('EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq');
+const CONTINUUM_PROGRAM_ID = new PublicKey('9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa');
 const CP_SWAP_PROGRAM_ID = new PublicKey('GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp');
 
 async function initializePoolWithClient() {

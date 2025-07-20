@@ -6,7 +6,7 @@ import { Program } from '@coral-xyz/anchor';
 import fs from 'fs';
 import path from 'path';
 
-const PROGRAM_ID = 'EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq';
+const PROGRAM_ID = '9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa';
 
 async function addRelayer() {
   console.log('🔐 Adding Authorized Relayer to Continuum CP-Swap\n');

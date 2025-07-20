@@ -193,7 +193,7 @@ async function createTestPool() {
   // Derive Continuum pool authority
   const [continuumAuthority] = PublicKey.findProgramAddressSync(
     [Buffer.from('cp_pool_authority'), poolId.toBuffer()],
-    new PublicKey('EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq') // Continuum program
+    new PublicKey('9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa') // Continuum program
   );
 
   // Save pool configuration

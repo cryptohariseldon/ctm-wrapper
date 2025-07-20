@@ -15,7 +15,7 @@ The relayer needs to transition from mock execution to real blockchain transacti
 Add environment variables and configuration for:
 - RPC endpoint (default: http://localhost:8899)
 - Relayer keypair path
-- Continuum program ID: `EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq`
+- Continuum program ID: `9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa`
 - CP-Swap program ID: `GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp`
 - Supported pool configurations
 

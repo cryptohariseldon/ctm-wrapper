@@ -10,7 +10,7 @@ import { RaydiumCpSwap } from "../raydium-cp-swap/target/types/raydium_cp_swap";
 // Configuration
 const TOKEN_CONFIG_FILE = path.join(__dirname, '../config/tokens.json');
 const POOL_CONFIG_FILE = path.join(__dirname, '../config/pool-final.json');
-const CONTINUUM_PROGRAM_ID = new PublicKey('EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq');
+const CONTINUUM_PROGRAM_ID = new PublicKey('9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa');
 
 async function initializePoolWithClient() {
   console.log('Initializing CP-Swap pool using Raydium client libraries...\n');

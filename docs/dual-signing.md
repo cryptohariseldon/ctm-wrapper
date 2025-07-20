@@ -245,7 +245,7 @@ Update the relayer configuration to include the program state:
 ```typescript
 // relayer/src/config.ts
 export const config = {
-  continuumProgramId: 'EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq',
+  continuumProgramId: '9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa',
   relayerKeypair: Keypair.fromSecretKey(...),
   // ... other config
 };
@@ -352,7 +352,7 @@ Returns relayer information including public key
 ```json
 {
   "relayerAddress": "GsV1jugD8ftfWBYNykA9SLK2V4mQqUW2sLop8MAfjVRq",
-  "continuumProgram": "EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq",
+  "continuumProgram": "9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa",
   // ...
 }
 ```

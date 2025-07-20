@@ -21,7 +21,7 @@ export const config = {
   port: parseInt(process.env.PORT || '8085', 10),
   
   // Programs
-  continuumProgramId: new PublicKey('EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq'),
+  continuumProgramId: new PublicKey('9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa'),
   cpSwapProgramId: new PublicKey('GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp'),
   
   // Relayer wallet

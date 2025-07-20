@@ -16,7 +16,7 @@ const POOL_CONFIG_FILE = path.join(__dirname, 'devnet-pool.json');
 const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
 
 // Program IDs - DEVNET
-const CONTINUUM_PROGRAM_ID = new PublicKey('EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq');
+const CONTINUUM_PROGRAM_ID = new PublicKey('9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa');
 
 async function testSwapImmediate() {
   console.log('Testing swap_immediate on DEVNET...\n');
