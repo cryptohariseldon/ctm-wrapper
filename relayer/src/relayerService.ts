@@ -1,4 +1,4 @@
-import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction, Commitment, ComputeBudgetProgram, TransactionInstruction, SystemProgram } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction, VersionedTransaction, TransactionMessage, Commitment, ComputeBudgetProgram, TransactionInstruction, SystemProgram } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 import { EventEmitter } from 'events';
 import winston from 'winston';
@@ -199,9 +199,8 @@ export class RelayerService extends EventEmitter {
       new PublicKey(params.userTokenB)
     );
 
-    // Create transaction and add instruction
-    const transaction = new Transaction();
-    transaction.add(swapIx);
+    // Prepare instructions array
+    const instructions: TransactionInstruction[] = [];
 
     // Add priority fee if configured
     if (relayerConfig.priorityFeeLevel !== 'none') {
@@ -212,36 +211,43 @@ export class RelayerService extends EventEmitter {
       };
       const microLamports = priorityFeeMap[relayerConfig.priorityFeeLevel];
       
-      transaction.add(
+      instructions.push(
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports
         })
       );
     }
 
-    // Set fee payer and recent blockhash
-    transaction.feePayer = userPublicKey;
-    const { blockhash } = await this.connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
+    // Add swap instruction
+    instructions.push(swapIx);
 
-    // Partially sign with relayer (if relayer needs to sign)
-    // Note: Check if relayer is a required signer
-    const requiresRelayerSignature = transaction.instructions.some(ix => 
+    // Get recent blockhash
+    const { blockhash } = await this.connection.getLatestBlockhash();
+
+    // Create v0 transaction message
+    const messageV0 = new TransactionMessage({
+      payerKey: userPublicKey,
+      recentBlockhash: blockhash,
+      instructions,
+    }).compileToV0Message();
+
+    // Create versioned transaction
+    const transaction = new VersionedTransaction(messageV0);
+
+    // Check if relayer signature is required by examining the instructions
+    const requiresRelayerSignature = instructions.some(ix => 
       ix.keys.some(key => key.pubkey.equals(this.relayerWallet.publicKey) && key.isSigner)
     );
 
     if (requiresRelayerSignature) {
-      transaction.partialSign(this.relayerWallet);
+      transaction.sign([this.relayerWallet]);
       this.logger.debug('Transaction partially signed by relayer', { orderId });
     } else {
       this.logger.debug('Relayer signature not required for this transaction', { orderId });
     }
 
     // Serialize transaction to base64
-    const transactionBase64 = Buffer.from(transaction.serialize({
-      requireAllSignatures: false,
-      verifySignatures: false
-    })).toString('base64');
+    const transactionBase64 = Buffer.from(transaction.serialize()).toString('base64');
 
     // Calculate PDA for order
     const [orderPda] = PublicKey.findProgramAddressSync(
@@ -505,7 +511,7 @@ export class RelayerService extends EventEmitter {
       // In a real implementation, we would parse the transaction logs or account data
       // For now, we'll use the min amount out as a fallback estimation
       const amountIn = parseInt(order.amountIn);
-      const minAmountOut = parseInt(order.minAmountOut);
+      const minAmountOut = parseInt(order.minAmountOut || '0');
       
       // Use minAmountOut as actual amount (conservative estimate)
       // In production, you'd parse transaction logs to get the exact amounts

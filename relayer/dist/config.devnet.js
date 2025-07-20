@@ -93,7 +93,22 @@ exports.config = {
     // Admin settings
     adminPublicKeys: [
     // Add admin public keys here
-    ]
+    ],
+    // Network flag
+    isDevnet: true,
+    // Token configuration
+    tokens: {
+        USDC: {
+            mint: '8eLeJssGBw8Z2z1y3uz1xCwzrWa2QjCqAtH7Y88MjTND',
+            decimals: 6,
+            symbol: 'USDC'
+        },
+        WSOL: {
+            mint: '99dB8f37b5n9rnU8Yc7D4Ey5XubJuCDDSacYwE4GPEtV',
+            decimals: 9,
+            symbol: 'WSOL'
+        }
+    }
 };
 // Validate configuration
 function validateConfig() {

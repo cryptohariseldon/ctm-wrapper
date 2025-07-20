@@ -59,6 +59,15 @@ const submitOrderSchema = zod_1.z.object({
     isBaseInput: zod_1.z.boolean(),
     userPublicKey: zod_1.z.string()
 });
+const createOrderSchema = zod_1.z.object({
+    poolId: zod_1.z.string(),
+    amountIn: zod_1.z.string(),
+    minAmountOut: zod_1.z.string(),
+    isBaseInput: zod_1.z.boolean(),
+    userPublicKey: zod_1.z.string(),
+    userTokenA: zod_1.z.string(),
+    userTokenB: zod_1.z.string()
+});
 const orderStatusSchema = zod_1.z.object({
     orderId: zod_1.z.string()
 });
@@ -170,6 +179,46 @@ app.post('/api/v1/orders', async (req, res) => {
     }
     catch (error) {
         logger.error('Order submission failed', error);
+        if (error instanceof zod_1.z.ZodError) {
+            return res.status(400).json({
+                error: 'Invalid request parameters',
+                details: error.errors
+            });
+        }
+        res.status(500).json({
+            error: error instanceof Error ? error.message : 'Internal server error'
+        });
+    }
+});
+// Create order endpoint - relayer builds and partially signs transaction
+app.post('/api/v1/orders2', async (req, res) => {
+    try {
+        // Validate request
+        const params = createOrderSchema.parse(req.body);
+        logger.info('Received order creation request', {
+            poolId: params.poolId,
+            user: params.userPublicKey,
+            amountIn: params.amountIn,
+            minAmountOut: params.minAmountOut,
+            isBaseInput: params.isBaseInput,
+            userTokenA: params.userTokenA,
+            userTokenB: params.userTokenB
+        });
+        // Build transaction with relayer signature
+        const result = await relayerService.createOrderTransaction(params);
+        res.json({
+            success: true,
+            orderId: result.orderId,
+            transaction: result.transactionBase64,
+            orderPda: result.orderPda.toBase58(),
+            sequence: result.sequence.toString(),
+            estimatedExecutionTime: result.estimatedExecutionTime,
+            fee: result.fee,
+            message: 'Transaction built and partially signed by relayer. Please sign with wallet and broadcast.'
+        });
+    }
+    catch (error) {
+        logger.error('Error creating order transaction:', error);
         if (error instanceof zod_1.z.ZodError) {
             return res.status(400).json({
                 error: 'Invalid request parameters',
