@@ -33,7 +33,7 @@ This document outlines the comprehensive plan to transition the Continuum CP-Swa
 **Status:** COMPLETED
 - Validator running at http://localhost:8899
 - CP-Swap deployed at: GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
-- Continuum deployed at: EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq
+- Continuum deployed at: 9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa
 
 **Testing Goals:**
 - ✅ Validator runs stable for 10+ minutes

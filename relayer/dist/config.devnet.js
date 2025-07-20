@@ -20,7 +20,7 @@ exports.config = {
     // Server
     port: parseInt(process.env.PORT || '8085', 10),
     // Programs
-    continuumProgramId: new web3_js_1.PublicKey('EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq'),
+    continuumProgramId: new web3_js_1.PublicKey('9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa'),
     cpSwapProgramId: new web3_js_1.PublicKey('GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp'),
     // Relayer wallet
     relayerKeypair: (() => {
@@ -93,7 +93,22 @@ exports.config = {
     // Admin settings
     adminPublicKeys: [
     // Add admin public keys here
-    ]
+    ],
+    // Network flag
+    isDevnet: true,
+    // Token configuration
+    tokens: {
+        USDC: {
+            mint: '8eLeJssGBw8Z2z1y3uz1xCwzrWa2QjCqAtH7Y88MjTND',
+            decimals: 6,
+            symbol: 'USDC'
+        },
+        WSOL: {
+            mint: '99dB8f37b5n9rnU8Yc7D4Ey5XubJuCDDSacYwE4GPEtV',
+            decimals: 9,
+            symbol: 'WSOL'
+        }
+    }
 };
 // Validate configuration
 function validateConfig() {

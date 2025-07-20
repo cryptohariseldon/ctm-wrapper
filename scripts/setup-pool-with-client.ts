@@ -15,7 +15,7 @@ const idl = JSON.parse(fs.readFileSync(path.join(__dirname, '../raydium-cp-swap/
 
 // Configuration
 const CP_SWAP_PROGRAM_ID = new PublicKey('GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp');
-const CONTINUUM_PROGRAM_ID = new PublicKey('EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq');
+const CONTINUUM_PROGRAM_ID = new PublicKey('9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa');
 
 // Seeds from raydium-cp-swap
 const AMM_CONFIG_SEED = Buffer.from('amm_config');

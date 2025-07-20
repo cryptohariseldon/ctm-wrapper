@@ -19,7 +19,7 @@ const POOL_CONFIG_FILE = path.join(__dirname, '../config/pool.json');
 const connection = new Connection('http://localhost:8899', 'confirmed');
 
 // Program IDs
-const CONTINUUM_PROGRAM_ID = new PublicKey('EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq');
+const CONTINUUM_PROGRAM_ID = new PublicKey('9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa');
 
 async function testRealSwap() {
   console.log('Testing real token swap through Continuum...\n');

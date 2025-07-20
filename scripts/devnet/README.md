@@ -20,7 +20,7 @@ This directory contains scripts for testing the Continuum CP-Swap integration on
 ### Step 1: Ensure Programs are Deployed
 
 The following programs should be deployed to devnet:
-- Continuum: `EaeWUSam5Li1fzCcCs33oE4jCLQT4F6RJXgrPYZaoKqq`
+- Continuum: `9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa`
 - CP-Swap: `GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp`
 
 ### Step 2: Fund Your Wallet
