@@ -234,17 +234,9 @@ export class RelayerService extends EventEmitter {
     // Create versioned transaction
     const transaction = new VersionedTransaction(messageV0);
 
-    // Check if relayer signature is required by examining the instructions
-    const requiresRelayerSignature = instructions.some(ix => 
-      ix.keys.some(key => key.pubkey.equals(this.relayerWallet.publicKey) && key.isSigner)
-    );
 
-    if (requiresRelayerSignature) {
-      transaction.sign([this.relayerWallet]);
-      this.logger.debug('Transaction partially signed by relayer', { orderId });
-    } else {
-      this.logger.debug('Relayer signature not required for this transaction', { orderId });
-    }
+    transaction.sign([this.relayerWallet]);
+    this.logger.debug('Transaction partially signed by relayer', { orderId });
 
     // Serialize transaction to base64
     const transactionBase64 = Buffer.from(transaction.serialize()).toString('base64');
@@ -279,7 +271,6 @@ export class RelayerService extends EventEmitter {
       orderId,
       sequence: sequence.toString(),
       poolId: params.poolId,
-      requiresRelayerSignature,
       transactionSize: transactionBase64.length
     });
 
