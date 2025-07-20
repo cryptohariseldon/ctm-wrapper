@@ -5,10 +5,11 @@ pub struct FifoState {
     pub current_sequence: u64,
     pub admin: Pubkey,
     pub emergency_pause: bool,
+    pub authorized_relayers: Vec<Pubkey>, // Add authorized relayers
 }
 
 impl FifoState {
-    pub const LEN: usize = 8 + 8 + 32 + 1;
+    pub const LEN: usize = 8 + 8 + 32 + 1 + 4 + (32 * 10); // Support up to 10 relayers
 }
 
 #[account]
@@ -77,4 +78,13 @@ pub struct OrderCancelled {
 pub struct PoolRegistered {
     pub pool_id: Pubkey,
     pub continuum_authority: Pubkey,
+}
+
+#[event]
+pub struct SwapExecuted {
+    pub sequence: u64,
+    pub pool_id: Pubkey,
+    pub amount_in: u64,
+    pub user: Pubkey,
+    pub relayer: Pubkey,
 }

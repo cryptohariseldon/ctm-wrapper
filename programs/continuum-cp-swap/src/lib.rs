@@ -73,4 +73,14 @@ pub mod continuum_cp_swap {
     ) -> Result<()> {
         instructions::swap_immediate(ctx, amount_in, min_amount_out, is_base_input, pool_id, pool_authority_bump)
     }
+    
+    /// Add an authorized relayer
+    pub fn add_relayer(ctx: Context<AddRelayer>) -> Result<()> {
+        instructions::add_relayer(ctx)
+    }
+    
+    /// Remove an authorized relayer
+    pub fn remove_relayer(ctx: Context<RemoveRelayer>) -> Result<()> {
+        instructions::remove_relayer(ctx)
+    }
 }

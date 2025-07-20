@@ -56,6 +56,13 @@ async function submitSwap(params: SwapParams) {
   console.log(`- Token A: ${poolInfo.tokenA.symbol} (${poolInfo.tokenA.mint})`);
   console.log(`- Token B: ${poolInfo.tokenB.symbol} (${poolInfo.tokenB.mint})`);
   console.log(`- Current price: ${poolInfo.price.USDCPerWSOL} USDC/WSOL`);
+  
+  // Get relayer info to know the relayer's public key
+  console.log('\n🔍 Fetching relayer information...');
+  const relayerInfoResponse = await axios.get(`${RELAYER_URL}/api/v1/info`);
+  const relayerInfo = relayerInfoResponse.data;
+  const relayerPublicKey = new PublicKey(relayerInfo.relayerAddress);
+  console.log('Relayer address:', relayerPublicKey.toBase58());
 
   // Determine token mints based on swap direction
   const tokenAMint = new PublicKey(poolInfo.tokenA.mint);
@@ -142,6 +149,7 @@ async function submitSwap(params: SwapParams) {
     )
     .accountsPartial({
       fifoState: fifoState,
+      relayer: relayerPublicKey, // ADD RELAYER AS SIGNER
       cpSwapProgram: CP_SWAP_PROGRAM_ID,
     })
     .remainingAccounts([
@@ -214,6 +222,13 @@ async function submitSwap(params: SwapParams) {
   console.log('Transaction version:', transaction.version);
   console.log('Static account keys:', messageV0.staticAccountKeys.length);
   console.log('Signatures present:', transaction.signatures.filter(sig => sig !== null).length);
+  
+  // Verify relayer is included
+  const relayerIndex = messageV0.staticAccountKeys.findIndex(key => key.equals(relayerPublicKey));
+  console.log('Relayer account index:', relayerIndex);
+  if (relayerIndex === -1) {
+    throw new Error('Relayer must be included in transaction accounts');
+  }
 
   // Submit to relayer
   console.log('\n📤 Submitting to relayer...');

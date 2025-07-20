@@ -24,6 +24,7 @@ pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
     fifo_state.current_sequence = 0;
     fifo_state.admin = ctx.accounts.admin.key();
     fifo_state.emergency_pause = false;
+    fifo_state.authorized_relayers = vec![]; // Initialize empty, admin can add relayers
     
     msg!("Continuum FIFO initialized with admin: {}", ctx.accounts.admin.key());
     

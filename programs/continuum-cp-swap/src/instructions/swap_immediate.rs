@@ -16,6 +16,12 @@ pub struct SwapImmediate<'info> {
     )]
     pub fifo_state: Account<'info, FifoState>,
     
+    /// The relayer executing the swap - must be authorized
+    #[account(
+        constraint = fifo_state.authorized_relayers.contains(&relayer.key()) @ ContinuumError::UnauthorizedRelayer
+    )]
+    pub relayer: Signer<'info>,
+    
     /// CHECK: The CP-Swap program
     pub cp_swap_program: UncheckedAccount<'info>,
     
@@ -94,10 +100,17 @@ pub fn swap_immediate(
         &[pool_authority_seeds],
     )?;
     
+    // Extract user from first remaining account
+    let user = ctx.remaining_accounts.get(0)
+        .ok_or(ContinuumError::Unauthorized)?
+        .key();
+    
     emit!(SwapExecuted {
         sequence,
         pool_id,
         amount_in,
+        user,
+        relayer: ctx.accounts.relayer.key(),
         is_base_input,
     });
     

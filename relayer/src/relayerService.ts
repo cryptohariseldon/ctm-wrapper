@@ -261,19 +261,21 @@ export class RelayerService extends EventEmitter {
         
         // Handle both legacy and versioned transactions
         if (order.transaction instanceof VersionedTransaction) {
-          // For versioned transactions, we need to add the relayer's signature
+          // For versioned transactions, we MUST add the relayer's signature
           const messageV0 = order.transaction.message;
-          const signers = [this.relayerWallet];
           
-          // Check if relayer needs to sign
+          // Check if relayer is included in the transaction
           const relayerIndex = messageV0.staticAccountKeys.findIndex(
             key => key.equals(this.relayerWallet.publicKey)
           );
           
-          if (relayerIndex !== -1 && !order.transaction.signatures[relayerIndex]) {
-            // Add relayer signature
-            order.transaction.sign([this.relayerWallet]);
+          if (relayerIndex === -1) {
+            throw new Error('Relayer must be included as a signer in the transaction');
           }
+          
+          // Always add relayer signature (even if it exists, this will overwrite)
+          order.transaction.sign([this.relayerWallet]);
+          this.logger.info(`Added relayer signature at index ${relayerIndex}`);
           
           signature = await this.connection.sendTransaction(order.transaction, {
             skipPreflight: false,
@@ -283,15 +285,18 @@ export class RelayerService extends EventEmitter {
           // Legacy transaction
           const transaction = order.transaction as Transaction;
           
-          // Check if relayer needs to sign
-          const needsRelayerSig = transaction.signatures.some(
-            sig => sig.publicKey.equals(this.relayerWallet.publicKey) && !sig.signature
+          // Check if relayer is a required signer
+          const relayerRequired = transaction.signatures.some(
+            sig => sig.publicKey.equals(this.relayerWallet.publicKey)
           );
           
-          if (needsRelayerSig) {
-            // Add relayer signature
-            transaction.partialSign(this.relayerWallet);
+          if (!relayerRequired) {
+            throw new Error('Relayer must be included as a signer in the transaction');
           }
+          
+          // Always add relayer signature
+          transaction.partialSign(this.relayerWallet);
+          this.logger.info('Added relayer signature to legacy transaction');
           
           // Send transaction
           signature = await this.connection.sendRawTransaction(

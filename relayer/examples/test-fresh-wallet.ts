@@ -112,6 +112,45 @@ async function main() {
     console.log(`Current balance: ${balance / LAMPORTS_PER_SOL} SOL`);
     
     if (balance > 0.1 * LAMPORTS_PER_SOL) {
+      // Check USDC balance
+      const { getAssociatedTokenAddressSync } = require('@solana/spl-token');
+      const { PublicKey } = require('@solana/web3.js');
+      
+      const usdcMint = new PublicKey('8eLeJssGBw8Z2z1y3uz1xCwzrWa2QjCqAtH7Y88MjTND');
+      const userUsdcAccount = getAssociatedTokenAddressSync(usdcMint, wallet.publicKey);
+      
+      let usdcBalance = 0;
+      try {
+        const tokenBalance = await connection.getTokenAccountBalance(userUsdcAccount);
+        usdcBalance = parseFloat(tokenBalance.value.uiAmountString || '0');
+        console.log(`USDC balance: ${usdcBalance} USDC`);
+      } catch (error) {
+        console.log('No USDC account found');
+      }
+      
+      // Airdrop USDC if needed
+      if (usdcBalance < 1) {
+        console.log('\n💵 Requesting USDC airdrop...');
+        try {
+          const axios = require('axios');
+          const airdropResponse = await axios.post('http://localhost:8085/api/v1/airdrop', {
+            address: wallet.publicKey.toBase58(),
+            token: 'USDC',
+            amount: 100 // 100 USDC
+          });
+          
+          console.log('✅ USDC airdrop successful!');
+          console.log(`- Amount: ${airdropResponse.data.amount} USDC`);
+          console.log(`- Signature: ${airdropResponse.data.signature}`);
+          
+          // Wait for airdrop to be confirmed
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        } catch (error: any) {
+          console.error('❌ USDC airdrop failed:', error.response?.data || error.message);
+          return;
+        }
+      }
+      
       // Use existing wallet
       console.log('\n🔄 Testing swap with existing wallet...');
       

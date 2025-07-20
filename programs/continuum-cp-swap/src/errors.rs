@@ -31,4 +31,7 @@ pub enum ContinuumError {
     
     #[msg("Invalid order status")]
     InvalidOrderStatus,
+    
+    #[msg("Unauthorized relayer")]
+    UnauthorizedRelayer,
 }

@@ -1033,6 +1033,22 @@ chmod +x test-relayer.sh
 ./test-relayer.sh
 ```
 
+## Documentation
+
+- [API Reference](./API.md) - Detailed API documentation
+- [Wallet Adapter Examples](./examples/WALLET_ADAPTER_README.md) - Integration with Phantom, Solflare, etc.
+- [Troubleshooting Guide](./TROUBLESHOOTING.md) - Common issues and solutions
+- [Examples](./examples/) - Code examples for various use cases
+
+## Troubleshooting
+
+See the [Troubleshooting Guide](./TROUBLESHOOTING.md) for solutions to common issues:
+- Transaction already processed errors
+- WebSocket connection problems
+- CORS configuration
+- Wallet adapter integration issues
+- And more...
+
 ## Support
 
 - Documentation: https://docs.continuum.fi
