@@ -75,7 +75,7 @@ CONTINUUM_PROGRAM_ID=9tcAhE4XGcZZTE8ez1EW8FF7rxyBN8uat2kkepgaeyEa
 CP_SWAP_PROGRAM_ID=GkenxCtvEabZrwFf15D3E6LjoZTywH2afNwiqDwthyDp
 
 # Server Configuration
-PORT=8086
+PORT=8080
 ALLOWED_ORIGINS=*
 
 # Performance Settings
@@ -275,7 +275,7 @@ show_status() {
     fi
     
     # Check HTTP endpoint
-    PORT=$(grep PORT "$CONFIG_FILE" | cut -d'=' -f2 || echo "8086")
+    PORT=$(grep PORT "$CONFIG_FILE" | cut -d'=' -f2 || echo "8080")
     if curl -s http://localhost:$PORT/health > /dev/null 2>&1; then
         echo -e "${GREEN}HTTP API: Running on http://localhost:$PORT${NC}"
         echo -e "${GREEN}WebSocket: Available on ws://localhost:$PORT/ws${NC}"

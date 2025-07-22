@@ -660,3 +660,26 @@ Supported Pools: 1
 {"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-20T15:07:35.358Z"}
 {"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-20T15:07:35.358Z"}
 {"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-20T15:07:35.358Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-22T15:44:41.687Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-22T15:44:41.694Z"}
+{"level":"info","message":"Relayer balance: 3.99380716 SOL","timestamp":"2025-07-22T15:44:41.836Z"}
+{"level":"info","message":"Relayer service started","timestamp":"2025-07-22T15:44:41.838Z"}
+{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-22T15:44:41.840Z"}
+{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-22T15:44:41.841Z"}
+{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-22T15:44:41.842Z"}
+{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-22T15:51:25.191Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-22T15:51:31.998Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-22T15:51:32.043Z"}
+{"level":"info","message":"Relayer balance: 3.99380716 SOL","timestamp":"2025-07-22T15:51:33.244Z"}
+{"level":"info","message":"Relayer service started","timestamp":"2025-07-22T15:51:33.246Z"}
+{"level":"info","message":"Relayer server listening on port 8085","timestamp":"2025-07-22T15:51:33.249Z"}
+{"level":"info","message":"WebSocket endpoint: ws://localhost:8085/ws","timestamp":"2025-07-22T15:51:33.249Z"}
+{"level":"info","message":"HTTP API endpoint: http://localhost:8085/api/v1","timestamp":"2025-07-22T15:51:33.250Z"}
+{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-22T15:56:00.781Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-22T15:56:06.509Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-22T15:56:06.518Z"}
+{"level":"info","message":"Relayer balance: 3.99380716 SOL","timestamp":"2025-07-22T15:56:07.122Z"}
+{"level":"info","message":"Relayer service started","timestamp":"2025-07-22T15:56:07.123Z"}
+{"level":"info","message":"Relayer server listening on port 8080","timestamp":"2025-07-22T15:56:07.125Z"}
+{"level":"info","message":"WebSocket endpoint: ws://localhost:8080/ws","timestamp":"2025-07-22T15:56:07.126Z"}
+{"level":"info","message":"HTTP API endpoint: http://localhost:8080/api/v1","timestamp":"2025-07-22T15:56:07.127Z"}
