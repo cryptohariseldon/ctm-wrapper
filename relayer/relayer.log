@@ -683,3 +683,11 @@ Supported Pools: 1
 {"level":"info","message":"Relayer server listening on port 8080","timestamp":"2025-07-22T15:56:07.125Z"}
 {"level":"info","message":"WebSocket endpoint: ws://localhost:8080/ws","timestamp":"2025-07-22T15:56:07.126Z"}
 {"level":"info","message":"HTTP API endpoint: http://localhost:8080/api/v1","timestamp":"2025-07-22T15:56:07.127Z"}
+{"level":"info","message":"Starting Continuum relayer service...","timestamp":"2025-07-22T17:26:12.716Z"}
+{"level":"info","message":"Relayer address:","timestamp":"2025-07-22T17:26:12.718Z"}
+{"level":"info","message":"Relayer balance: 3.99380716 SOL","timestamp":"2025-07-22T17:26:13.620Z"}
+{"level":"info","message":"Relayer service started","timestamp":"2025-07-22T17:26:13.621Z"}
+{"level":"info","message":"Relayer server listening on port 8080","timestamp":"2025-07-22T17:26:13.623Z"}
+{"level":"info","message":"WebSocket endpoint: ws://localhost:8080/ws","timestamp":"2025-07-22T17:26:13.623Z"}
+{"level":"info","message":"HTTP API endpoint: http://localhost:8080/api/v1","timestamp":"2025-07-22T17:26:13.623Z"}
+{"level":"info","message":"Shutting down relayer...","timestamp":"2025-07-22T17:26:23.467Z"}
